@@ -70,9 +70,8 @@ export const AgeGateModal = () => {
   const [dob, setDob] = useState('');
   const [confirmed21Plus, setConfirmed21Plus] = useState(false);
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleContinue = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleContinue = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!firstName.trim()) {
@@ -100,8 +99,12 @@ export const AgeGateModal = () => {
       setError(`You must be at least ${MIN_AGE} years old to access this site.`);
       return;
     }
-    setSubmitting(true);
-    await fetch('/api/age-gate/register', {
+
+    // Let verified users proceed instantly; persistence runs in the background.
+    storeVerification();
+    setOpen(false);
+
+    void fetch('/api/age-gate/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -110,10 +113,7 @@ export const AgeGateModal = () => {
         dob,
         verifiedAt: new Date().toISOString(),
       }),
-    }).catch(() => null);
-    setSubmitting(false);
-    storeVerification();
-    setOpen(false);
+    }).catch(() => undefined);
   };
 
   const exit = () => {
@@ -200,10 +200,9 @@ export const AgeGateModal = () => {
         <div className="mt-6 flex gap-3">
           <button
             type="submit"
-            disabled={submitting}
             className="flex-1 rounded-full bg-[var(--color-gold)] px-5 py-3 text-xs uppercase tracking-[0.15em] text-[var(--color-ink)] transition hover:brightness-110"
           >
-            {submitting ? 'Saving...' : 'Continue'}
+            Continue
           </button>
           <button
             type="button"
