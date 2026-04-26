@@ -503,16 +503,22 @@ export const createAgeGateRegistrant = async (input: {
   dob: string;
   verifiedAt: string;
 }) => {
-  if (!hasDatabaseUrl) return { ok: true };
-  await prisma!.ageGateRegistrant.create({
-    data: {
-      firstName: input.firstName,
-      email: input.email,
-      dob: new Date(input.dob),
-      verifiedAt: new Date(input.verifiedAt),
-    },
-  });
-  return { ok: true };
+  if (!hasDatabaseUrl) {
+    return { ok: true, persisted: false, message: 'DATABASE_URL not configured.' };
+  }
+  try {
+    await prisma!.ageGateRegistrant.create({
+      data: {
+        firstName: input.firstName,
+        email: input.email,
+        dob: new Date(input.dob),
+        verifiedAt: new Date(input.verifiedAt),
+      },
+    });
+    return { ok: true, persisted: true };
+  } catch {
+    return { ok: false, persisted: false, message: 'Failed to save age gate registrant.' };
+  }
 };
 
 export const getAdminFaqs = async () => {

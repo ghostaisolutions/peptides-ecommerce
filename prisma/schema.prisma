@@ -6,79 +6,57 @@ datasource db {
   provider = "postgresql"
 }
 
-enum OrderStatus {
-  PENDING
-  REVIEWING
-  APPROVED
-  PAYMENT_SENT
-  COMPLETED
-  CANCELLED
-}
-
-enum PaymentStatus {
-  UNPAID
-  INVOICED
-  PARTIAL
-  PAID
-  VOID
-}
-
-enum DiscountType {
-  PERCENT
-  FIXED
-}
-
 model Category {
   id          String    @id @default(cuid())
   name        String
   slug        String    @unique
   description String
   isFuture    Boolean   @default(false)
-  products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  products    Product[]
 }
 
 model Product {
-  id                         String   @id @default(cuid())
-  name                       String
-  slug                       String   @unique
-  subtitle                   String
-  shortDescription           String
-  longDescription            String
-  price                      Decimal  @db.Decimal(10, 2)
-  compareAtPrice             Decimal? @db.Decimal(10, 2)
-  images                     Json
-  stockQuantity              Int      @default(0)
-  sku                        String   @unique
-  badge                      String?
-  includesComplimentaryKit   Boolean  @default(false)
-  attributes                 Json
-  isActive                   Boolean  @default(true)
-  isFeatured                 Boolean  @default(false)
-  categoryId                 String
-  category                   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  variants                   ProductVariant[]
-  coaDocuments               COADocument[]
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  id                       String           @id @default(cuid())
+  name                     String
+  slug                     String           @unique
+  subtitle                 String
+  shortDescription         String
+  longDescription          String
+  price                    Decimal          @db.Decimal(10, 2)
+  compareAtPrice           Decimal?         @db.Decimal(10, 2)
+  images                   Json
+  stockQuantity            Int              @default(0)
+  sku                      String           @unique
+  badge                    String?
+  includesComplimentaryKit Boolean          @default(false)
+  attributes               Json
+  isActive                 Boolean          @default(true)
+  isFeatured               Boolean          @default(false)
+  categoryId               String
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  coaDocuments             COADocument[]
+  category                 Category         @relation(fields: [categoryId], references: [id])
+  variants                 ProductVariant[]
 }
 
 model ProductVariant {
-  id             String    @id @default(cuid())
+  id             String      @id @default(cuid())
   productId      String
   name           String
-  sku            String    @unique
-  price          Decimal   @db.Decimal(10, 2)
-  compareAtPrice Decimal?  @db.Decimal(10, 2)
-  stock          Int       @default(0)
-  active         Boolean   @default(true)
+  sku            String      @unique
+  price          Decimal     @db.Decimal(10, 2)
+  compareAtPrice Decimal?    @db.Decimal(10, 2)
+  stock          Int         @default(0)
+  active         Boolean     @default(true)
   imageOverride  String?
-  sortOrder      Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sortOrder      Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   orderItems     OrderItem[]
+  product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
 }
@@ -139,17 +117,17 @@ model DiscountRule {
 }
 
 model COADocument {
-  id           String   @id @default(cuid())
-  productId    String
-  batchNumber  String
-  purityPercent Decimal @db.Decimal(5, 2)
-  labName      String
-  testDate     DateTime
-  pdfUrl       String
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  productId     String
+  batchNumber   String
+  purityPercent Decimal  @db.Decimal(5, 2)
+  labName       String
+  testDate      DateTime
+  pdfUrl        String
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
 }
@@ -179,46 +157,67 @@ model AgeGateRegistrant {
 }
 
 model OrderRequest {
-  id                    String        @id @default(cuid())
-  orderReference        String        @unique
-  customerName          String
-  email                 String
-  phone                 String
-  shippingAddress       String
-  city                  String
-  state                 String
-  postalCode            String
-  country               String
-  notes                 String?
-  paymentMethodId       String
-  paymentMethodLabel    String
-  paymentInstructions   String?
-  paymentLink           String?
-  acknowledgements      Json
-  status                OrderStatus   @default(PENDING)
-  paymentStatus         PaymentStatus @default(UNPAID)
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  reviewedAt            DateTime?
-  approvedAt            DateTime?
-  paymentSentAt         DateTime?
-  completedAt           DateTime?
-  cancelledAt           DateTime?
-  items                 OrderItem[]
+  id                  String        @id @default(cuid())
+  orderReference      String        @unique
+  customerName        String
+  email               String
+  phone               String
+  shippingAddress     String
+  city                String
+  state               String
+  postalCode          String
+  country             String
+  notes               String?
+  paymentMethodId     String
+  paymentMethodLabel  String
+  paymentInstructions String?
+  paymentLink         String?
+  acknowledgements    Json
+  status              OrderStatus   @default(PENDING)
+  paymentStatus       PaymentStatus @default(UNPAID)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  reviewedAt          DateTime?
+  approvedAt          DateTime?
+  paymentSentAt       DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  items               OrderItem[]
 }
 
 model OrderItem {
-  id             String       @id @default(cuid())
-  orderRequestId String
-  productId      String?
+  id               String          @id @default(cuid())
+  orderRequestId   String
+  productId        String?
+  productName      String
+  sku              String?
+  quantity         Int
+  unitPrice        Decimal         @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now())
   productVariantId String?
-  productName    String
-  variantName    String?
-  sku            String?
-  quantity       Int
-  unitPrice      Decimal      @db.Decimal(10, 2)
-  createdAt      DateTime     @default(now())
+  variantName      String?
+  orderRequest     OrderRequest    @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
+}
 
-  orderRequest   OrderRequest @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
-  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+enum OrderStatus {
+  PENDING
+  REVIEWING
+  APPROVED
+  PAYMENT_SENT
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  INVOICED
+  PARTIAL
+  PAID
+  VOID
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
 }

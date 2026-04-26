@@ -80,33 +80,72 @@ export const AgeGateModal = () => {
   const [dob, setDob] = useState('');
   const [confirmed21Plus, setConfirmed21Plus] = useState(false);
   const [error, setError] = useState('');
-  const emailIsValid = email.trim().length > 3 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const canContinue = Boolean(firstName.trim() && dob && confirmed21Plus && emailIsValid);
+
+  const persistRegistrant = async (payload: {
+    firstName: string;
+    email: string;
+    dob: string;
+    verifiedAt: string;
+  }) => {
+    const body = JSON.stringify(payload);
+
+    try {
+      const response = await fetch('/api/age-gate/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        throw new Error('Age gate registration request failed.');
+      }
+
+      const data = (await response.json().catch(() => null)) as { persisted?: boolean } | null;
+      if (data?.persisted === false) {
+        console.warn('Age gate verification completed, but registration was not persisted.');
+      }
+      return;
+    } catch {
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        const blob = new Blob([body], { type: 'application/json' });
+        navigator.sendBeacon('/api/age-gate/register', blob);
+      }
+    }
+  };
 
   const handleContinue = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!firstName.trim()) {
+    const formData = new FormData(event.currentTarget);
+    const firstNameValue = String(formData.get('firstName') ?? '').trim();
+    const emailValue = String(formData.get('email') ?? '').trim();
+    const dobValue = String(formData.get('dob') ?? '').trim();
+    const confirmedValue = formData.get('confirmed21Plus') === 'on';
+
+    if (!firstNameValue) {
       setError('Please enter your first name.');
       return;
     }
-    if (!email.trim()) {
+    if (!emailValue) {
       setError('Please enter your email address.');
       return;
     }
-    if (!confirmed21Plus) {
+    if (!confirmedValue) {
       setError('You must confirm that you are 21+ years old.');
       return;
     }
-    if (!dob) {
+    if (!dobValue) {
       setError('Please enter your date of birth.');
       return;
     }
+    const emailIsValid = emailValue.length > 3 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
     if (!emailIsValid) {
       setError('Please enter a valid email address.');
       return;
     }
-    const parsedDob = parseDob(dob);
+    const parsedDob = parseDob(dobValue);
     if (!parsedDob) {
       setError('Please enter a valid date of birth.');
       return;
@@ -125,16 +164,12 @@ export const AgeGateModal = () => {
     storeVerification();
     setOpen(false);
 
-    void fetch('/api/age-gate/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        firstName: firstName.trim(),
-        email: email.trim(),
-        dob,
+    void persistRegistrant({
+        firstName: firstNameValue,
+        email: emailValue,
+        dob: dobValue,
         verifiedAt: new Date().toISOString(),
-      }),
-    }).catch(() => undefined);
+      });
   };
 
   const exit = () => {
@@ -170,6 +205,7 @@ export const AgeGateModal = () => {
             First Name
             <input
               type="text"
+              name="firstName"
               value={firstName}
               onChange={(e) => {
                 setFirstName(e.target.value);
@@ -183,6 +219,7 @@ export const AgeGateModal = () => {
             Email Address
             <input
               type="email"
+              name="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -200,6 +237,7 @@ export const AgeGateModal = () => {
           <input
             id="dob"
             type="date"
+            name="dob"
             value={dob}
             onChange={(e) => {
               setDob(e.target.value);
@@ -213,6 +251,7 @@ export const AgeGateModal = () => {
         <label className="mt-4 flex items-start gap-2 text-xs text-[var(--color-sand)]">
           <input
             type="checkbox"
+            name="confirmed21Plus"
             checked={confirmed21Plus}
             onChange={(e) => {
               setConfirmed21Plus(e.target.checked);
@@ -226,8 +265,7 @@ export const AgeGateModal = () => {
         <div className="mt-6 flex gap-3">
           <button
             type="submit"
-            disabled={!canContinue}
-            className="flex-1 rounded-full bg-[var(--color-gold)] px-5 py-3 text-xs uppercase tracking-[0.15em] text-[var(--color-ink)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-full bg-[var(--color-gold)] px-5 py-3 text-xs uppercase tracking-[0.15em] text-[var(--color-ink)] transition hover:brightness-110"
           >
             Continue
           </button>
@@ -241,7 +279,7 @@ export const AgeGateModal = () => {
         </div>
 
         <p className="mt-4 text-center text-[10px] text-[var(--color-muted)]">
-          Complete all fields to continue. Verification is stored locally for {EXPIRY_DAYS} days.
+          Verification is stored locally for {EXPIRY_DAYS} days.
         </p>
       </form>
     </div>

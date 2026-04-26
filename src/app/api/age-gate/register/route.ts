@@ -22,5 +22,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unable to save registrant.' }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, persisted: result.persisted });
 }
