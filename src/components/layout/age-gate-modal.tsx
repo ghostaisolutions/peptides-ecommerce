@@ -18,30 +18,54 @@ const readCookieExpiry = (): number | null => {
   return Number.isFinite(value) ? value : null;
 };
 
+const readLocalExpiry = (): number | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { expires?: number };
+    return typeof parsed.expires === 'number' ? parsed.expires : null;
+  } catch {
+    return null;
+  }
+};
+
 const writeCookieExpiry = (expires: number) => {
   if (typeof document === 'undefined') return;
   const maxAge = EXPIRY_DAYS * 24 * 60 * 60;
-  document.cookie = `${COOKIE_KEY}=${expires}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+  const secureAttr = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${COOKIE_KEY}=${expires}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secureAttr}`;
 };
 
 const isVerified = (): boolean => {
   if (typeof window === 'undefined') return false;
 
-  let localExpiry: number | null = null;
+  const now = Date.now();
+  const localExpiry = readLocalExpiry();
+  const cookieExpiry = readCookieExpiry();
+  const localValid = typeof localExpiry === 'number' && localExpiry > now;
+  const cookieValid = typeof cookieExpiry === 'number' && cookieExpiry > now;
 
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as { expires?: number };
-      localExpiry = typeof parsed.expires === 'number' ? parsed.expires : null;
-    }
-  } catch {
-    localExpiry = null;
+  if (!localValid && !cookieValid) {
+    return false;
   }
 
-  const cookieExpiry = readCookieExpiry();
-  const expires = localExpiry ?? cookieExpiry;
-  return typeof expires === 'number' && Date.now() < expires;
+  // Self-heal any stale/mismatched state so future checks remain consistent.
+  const unifiedExpiry = Math.max(localExpiry ?? 0, cookieExpiry ?? 0);
+  if (unifiedExpiry > now) {
+    if (localExpiry !== unifiedExpiry) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ verified: true, expires: unifiedExpiry }));
+      } catch {
+        // Ignore storage write failures; cookie fallback still works.
+      }
+    }
+    if (cookieExpiry !== unifiedExpiry) {
+      writeCookieExpiry(unifiedExpiry);
+    }
+  }
+
+  return true;
 };
 
 const storeVerification = () => {

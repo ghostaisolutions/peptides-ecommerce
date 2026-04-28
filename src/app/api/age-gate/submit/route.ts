@@ -61,11 +61,13 @@ export async function POST(request: Request) {
   // Set the verification cookie so the modal won't show again.
   const expires = Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000;
   const maxAge = EXPIRY_DAYS * 24 * 60 * 60;
+  const isHttps = new URL(request.url).protocol === 'https:';
+  const secure = isHttps ? '; Secure' : '';
 
   const response = NextResponse.redirect(redirectTo, 303);
   response.headers.set(
     'Set-Cookie',
-    `${COOKIE_KEY}=${expires}; Max-Age=${maxAge}; Path=/; SameSite=Lax`,
+    `${COOKIE_KEY}=${expires}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`,
   );
 
   // Persist registrant in the background (best-effort; don't block the redirect).
