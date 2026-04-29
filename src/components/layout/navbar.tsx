@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 import { TrustBar } from '@/components/layout/trust-bar';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -23,12 +24,46 @@ const links = [
 export const Navbar = () => {
   const pathname = usePathname();
   const { cartCount } = useCart();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
+    const onEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
+      }
+    };
+
+    const onOutsideClick = (event: MouseEvent) => {
+      if (!menuRef.current) {
+        return;
+      }
+      if (!menuRef.current.contains(event.target as Node)) {
+        setMobileOpen(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onEsc);
+    document.addEventListener('mousedown', onOutsideClick);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onEsc);
+      document.removeEventListener('mousedown', onOutsideClick);
+    };
+  }, [mobileOpen]);
 
   return (
-    <header className="sticky top-0 z-40 bg-[rgba(26,26,26,0.72)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-[rgba(26,26,26,0.72)] backdrop-blur-xl">
       <TrustBar />
       <div className="border-b border-[var(--color-border)]">
-        <div className="container flex items-center justify-between py-4">
+        <div className="container flex items-center justify-between gap-3 py-4">
           <Link href="/" className="flex items-center gap-3">
             <span className="relative h-10 w-10 overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-depth)]">
               <SafeImage
@@ -40,7 +75,7 @@ export const Navbar = () => {
                 fallbackLabel="Logo"
               />
             </span>
-            <span className="font-serif text-xl tracking-wide text-[var(--color-text)]">{siteConfig.brandName}</span>
+            <span className="font-serif text-lg tracking-wide text-[var(--color-text)] sm:text-xl">{siteConfig.brandName}</span>
           </Link>
 
           <nav className="hidden items-center gap-5 lg:flex">
@@ -55,14 +90,73 @@ export const Navbar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/register" className="btn-secondary hidden sm:inline-flex">
               New Customer
             </Link>
             <Link href="/cart" className="btn-primary inline-flex">
               Cart ({cartCount})
             </Link>
+            <button
+              type="button"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav-drawer"
+              aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[rgba(26,26,26,0.86)] text-[var(--color-text)] transition hover:border-[var(--color-gold)] lg:hidden"
+              onClick={() => setMobileOpen((prev) => !prev)}
+            >
+              <span className="sr-only">Menu</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                {mobileOpen ? (
+                  <>
+                    <path d="M6 6l12 12" />
+                    <path d="M18 6L6 18" />
+                  </>
+                ) : (
+                  <>
+                    <path d="M3 6h18" />
+                    <path d="M3 12h18" />
+                    <path d="M3 18h18" />
+                  </>
+                )}
+              </svg>
+            </button>
           </div>
+        </div>
+      </div>
+
+      <div className={`lg:hidden ${mobileOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+        <div
+          className={`fixed inset-0 bg-black/55 transition-opacity duration-300 ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+        <div
+          id="mobile-nav-drawer"
+          ref={menuRef}
+          className={`absolute inset-x-0 top-full border-b border-[var(--color-border)] bg-[linear-gradient(180deg,rgba(42,18,21,0.98),rgba(20,15,16,0.98))] shadow-2xl transition-all duration-300 ${mobileOpen ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'}`}
+        >
+          <nav className="container flex flex-col py-4">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`rounded-lg px-2 py-3 text-xs uppercase tracking-[0.15em] transition ${pathname === link.href ? 'bg-[rgba(212,175,55,0.12)] text-[var(--color-text)]' : 'text-[var(--color-muted)] hover:bg-[rgba(248,245,240,0.05)] hover:text-[var(--color-text)]'}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <div className="mt-3 grid grid-cols-1 gap-2 border-t border-[var(--color-border)] pt-3 sm:grid-cols-2">
+              <Link href="/register" className="btn-secondary w-full justify-center" onClick={() => setMobileOpen(false)}>
+                New Customer
+              </Link>
+              <Link href="/cart" className="btn-primary w-full justify-center" onClick={() => setMobileOpen(false)}>
+                Cart ({cartCount})
+              </Link>
+            </div>
+          </nav>
         </div>
       </div>
     </header>
