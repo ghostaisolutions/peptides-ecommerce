@@ -20,7 +20,9 @@ export default async function Home() {
         <Hero />
       </div>
 
-      <PremiumSpotlight products={featuredProducts} />
+      <div className="pt-6 sm:pt-7 md:pt-8">
+        <PremiumSpotlight products={featuredProducts} />
+      </div>
 
       <section>
         <div className="mb-6 flex items-end justify-between gap-4">
