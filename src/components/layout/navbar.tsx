@@ -91,9 +91,11 @@ export const Navbar = () => {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/register" className="btn-secondary hidden lg:inline-flex">
-              New Customer
-            </Link>
+            <div className="hidden lg:flex">
+              <Link href="/register" className="btn-secondary">
+                New Customer
+              </Link>
+            </div>
             <Link href="/cart" className="btn-primary inline-flex px-3 py-2 text-[10px] tracking-[0.13em] sm:px-4 sm:py-2.5 sm:text-[11px]">
               Cart ({cartCount})
             </Link>
