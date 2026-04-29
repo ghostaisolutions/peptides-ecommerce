@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { SafeImage } from '@/components/ui/safe-image';
 import { complimentaryKitItems } from '@/lib/data/site';
-import { siteImages } from '@/lib/config/images';
 
 export const KitShowcase = () => {
   return (
@@ -10,7 +9,7 @@ export const KitShowcase = () => {
       <div className="peptide-overlay peptide-overlay-soft absolute inset-0" />
       <div className="relative aspect-[5/4] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-soft)]">
         <SafeImage
-          src={siteImages.kit.main}
+          src="/images/kit/example_kit.jpg"
           alt="Complimentary research kit"
           sizes="(max-width: 1024px) 100vw, 48vw"
           className="object-cover"
