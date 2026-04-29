@@ -57,6 +57,7 @@ const extractAcknowledgements = (value: unknown): OrderAcknowledgements => {
     termsAccepted: source.termsAccepted === true,
     verificationAccepted: source.verificationAccepted === true,
     ageConfirmed: source.ageConfirmed === true,
+    researchDisclaimerAccepted: source.researchDisclaimerAccepted === true,
   };
 };
 
@@ -312,8 +313,9 @@ const toStoredOrderFromDb = (row: {
 }): StoredOrderRequest => {
   const createdAt = row.createdAt.toISOString();
   const workflow = extractWorkflow(row.acknowledgements, createdAt);
+  const rowExtended = row as typeof row & { shippingMethodId?: string | null; shippingMethodLabel?: string | null };
 
-  return buildStoredOrder({
+  const stored = buildStoredOrder({
     id: row.id,
     orderReference: row.orderReference,
     paymentMethodLabel: row.paymentMethodLabel,
@@ -330,6 +332,8 @@ const toStoredOrderFromDb = (row: {
       postalCode: row.postalCode,
       country: row.country,
       paymentMethodId: row.paymentMethodId,
+      shippingMethodId: rowExtended.shippingMethodId ?? undefined,
+      shippingMethodLabel: rowExtended.shippingMethodLabel ?? undefined,
       notes: row.notes ?? undefined,
       acknowledgements: extractAcknowledgements(row.acknowledgements),
       items: row.items.map((item) => ({
@@ -343,6 +347,9 @@ const toStoredOrderFromDb = (row: {
       })),
     },
   });
+  stored.shippingMethodId = rowExtended.shippingMethodId ?? undefined;
+  stored.shippingMethodLabel = rowExtended.shippingMethodLabel ?? undefined;
+  return stored;
 };
 
 export const createOrderRequestRecord = async (order: OrderRequest) => {
@@ -366,6 +373,8 @@ export const createOrderRequestRecord = async (order: OrderRequest) => {
           notes: order.notes,
           paymentMethodId: order.paymentMethodId,
           paymentMethodLabel: getPaymentLabel(order.paymentMethodId),
+          shippingMethodId: order.shippingMethodId,
+          shippingMethodLabel: order.shippingMethodLabel,
           acknowledgements: composeAcknowledgements(order.acknowledgements, workflow),
           ...mapWorkflowToDb('pending'),
           items: {

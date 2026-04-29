@@ -7,9 +7,10 @@ import { useMemo, useState } from 'react';
 import { CheckoutSummary } from '@/components/commerce/checkout-summary';
 import { LegalAcknowledgement } from '@/components/forms/legal-acknowledgement';
 import { PaymentMethodSelector } from '@/components/forms/payment-method-selector';
+import { ShippingMethodSelector } from '@/components/forms/shipping-method-selector';
 import { useCart } from '@/context/cart-context';
 import { paymentMethods } from '@/lib/data/site';
-import type { DiscountRule, OrderAcknowledgements, Product } from '@/lib/types';
+import type { DiscountRule, OrderAcknowledgements, Product, ShippingMethod } from '@/lib/types';
 import { computeDiscount } from '@/lib/utils/discounts';
 
 const defaultAcknowledgements: OrderAcknowledgements = {
@@ -17,6 +18,7 @@ const defaultAcknowledgements: OrderAcknowledgements = {
   termsAccepted: false,
   verificationAccepted: false,
   ageConfirmed: false,
+  researchDisclaimerAccepted: false,
 };
 
 const defaultFormState = {
@@ -31,9 +33,17 @@ const defaultFormState = {
   notes: '',
 };
 
-const stepLabels = ['Customer Info', 'Address', 'Acknowledgements', 'Payment Preference', 'Review & Submit'];
+const stepLabels = ['Customer Info', 'Address', 'Shipping Method', 'Acknowledgements', 'Payment Preference', 'Review & Submit'];
 
-export const CheckoutForm = ({ catalog, discountRules }: { catalog: Product[]; discountRules: DiscountRule[] }) => {
+export const CheckoutForm = ({
+  catalog,
+  discountRules,
+  shippingMethods,
+}: {
+  catalog: Product[];
+  discountRules: DiscountRule[];
+  shippingMethods: ShippingMethod[];
+}) => {
   const router = useRouter();
   const { resolveItems, clearCart } = useCart();
   const [step, setStep] = useState(0);
@@ -42,6 +52,9 @@ export const CheckoutForm = ({ catalog, discountRules }: { catalog: Product[]; d
   const [formState, setFormState] = useState(defaultFormState);
   const [selectedMethod, setSelectedMethod] = useState(
     paymentMethods.find((method) => method.enabled)?.id ?? '',
+  );
+  const [selectedShipping, setSelectedShipping] = useState(
+    shippingMethods.find((m) => m.active)?.id ?? '',
   );
   const [discountCode, setDiscountCode] = useState('');
   const [acknowledgements, setAcknowledgements] = useState(defaultAcknowledgements);
@@ -67,12 +80,17 @@ export const CheckoutForm = ({ catalog, discountRules }: { catalog: Product[]; d
       return false;
     }
 
-    if (step === 2 && !Object.values(acknowledgements).every(Boolean)) {
+    if (step === 2 && shippingMethods.length > 0 && !selectedShipping) {
+      setMessage('Select a shipping method before continuing.');
+      return false;
+    }
+
+    if (step === 3 && !Object.values(acknowledgements).every(Boolean)) {
       setMessage('Complete all required acknowledgements before continuing.');
       return false;
     }
 
-    if (step === 3 && !selectedMethod) {
+    if (step === 4 && !selectedMethod) {
       setMessage('Select a payment preference before continuing.');
       return false;
     }
@@ -107,12 +125,16 @@ export const CheckoutForm = ({ catalog, discountRules }: { catalog: Product[]; d
     setSubmitting(true);
     setMessage('');
 
+    const selectedShippingMethod = shippingMethods.find((m) => m.id === selectedShipping);
+
     const response = await fetch('/api/order-request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...formState,
         paymentMethodId: selectedMethod,
+        shippingMethodId: selectedShippingMethod?.id,
+        shippingMethodLabel: selectedShippingMethod ? `${selectedShippingMethod.name} (${selectedShippingMethod.carrier})` : undefined,
         acknowledgements,
         items: resolved.map((item) => ({
           productId: item.product.id,
@@ -197,11 +219,15 @@ export const CheckoutForm = ({ catalog, discountRules }: { catalog: Product[]; d
           </div>
         ) : null}
 
-        {step === 2 ? <LegalAcknowledgement value={acknowledgements} onChange={setAcknowledgements} /> : null}
+        {step === 2 ? (
+          <ShippingMethodSelector methods={shippingMethods} selected={selectedShipping} onSelect={setSelectedShipping} />
+        ) : null}
 
-        {step === 3 ? <PaymentMethodSelector methods={paymentMethods} selected={selectedMethod} onSelect={setSelectedMethod} /> : null}
+        {step === 3 ? <LegalAcknowledgement value={acknowledgements} onChange={setAcknowledgements} /> : null}
 
-        {step === 4 ? (
+        {step === 4 ? <PaymentMethodSelector methods={paymentMethods} selected={selectedMethod} onSelect={setSelectedMethod} /> : null}
+
+        {step === 5 ? (
           <div className="premium-surface-deep rounded-[1.4rem] p-6">
             <h2 className="font-serif text-2xl text-[var(--color-text)]">Review & Submit</h2>
             <div className="mt-4">
@@ -223,11 +249,30 @@ export const CheckoutForm = ({ catalog, discountRules }: { catalog: Product[]; d
                 <p className="mt-1">{formState.country}</p>
               </div>
             </div>
-            <p className="mt-4 text-sm text-[var(--color-muted)]">Selected payment preference: {paymentMethods.find((method) => method.id === selectedMethod)?.label ?? 'Not selected'}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] p-4 text-sm text-[var(--color-muted)]">
+                <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">Shipping Method</p>
+                <p className="mt-2 text-[var(--color-text)]">
+                  {shippingMethods.find((m) => m.id === selectedShipping)?.name ?? 'Not selected'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] p-4 text-sm text-[var(--color-muted)]">
+                <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">Payment Method</p>
+                <p className="mt-2 text-[var(--color-text)]">
+                  {paymentMethods.find((method) => method.id === selectedMethod)?.label ?? 'Not selected'}
+                </p>
+              </div>
+            </div>
           </div>
         ) : null}
 
         <div className="flex flex-wrap gap-3">
+          {step === stepLabels.length - 1 ? (
+            <p className="w-full text-xs text-[var(--color-muted)]">
+              Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our{' '}
+              <Link href="/privacy" className="underline hover:text-[var(--color-gold)]">privacy policy</Link>.
+            </p>
+          ) : null}
           {step > 0 ? (
             <button className="btn-secondary" type="button" onClick={previousStep} disabled={submitting}>
               Back

@@ -17,6 +17,8 @@ import {
   getAdminProducts,
   getAdminShippingMethods,
 } from '@/lib/services/admin-data';
+import { ensureBaselineShippingMethods } from '@/lib/services/admin-data';
+import { getAllSettings } from '@/lib/services/settings';
 
 export default async function AdminPage() {
   if (!(await isAdminAuthenticated())) {
@@ -24,8 +26,9 @@ export default async function AdminPage() {
   }
 
   await ensureBaselineCatalogData();
+  await ensureBaselineShippingMethods();
 
-  const [products, faqs, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods] = await Promise.all([
+  const [products, faqs, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods, initialSettings] = await Promise.all([
     getAdminProducts(),
     getAdminFaqs(),
     getAdminLegalPages(),
@@ -34,6 +37,7 @@ export default async function AdminPage() {
     getAdminDiscountRules(),
     getAdminCoadocuments(),
     getAdminShippingMethods(),
+    getAllSettings(),
   ]);
 
   return (
@@ -53,6 +57,7 @@ export default async function AdminPage() {
         shippingMethods={shippingMethods}
         dbEnabled={hasDatabaseUrl}
         isClientMode={businessConfig.isClientMode}
+        initialSettings={initialSettings}
         faqs={faqs.map((faq) => ({ id: (faq as { id?: string }).id ?? faq.question, question: faq.question, answer: faq.answer }))}
         legalPages={legalPages.map((page) => ({
           id: String((page as { id?: string }).id ?? page.slug),

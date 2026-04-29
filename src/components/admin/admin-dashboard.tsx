@@ -16,6 +16,7 @@ type DashboardProps = {
   discountRules: DiscountRule[];
   coaDocuments: COADocument[];
   shippingMethods: ShippingMethod[];
+  initialSettings: Record<string, string>;
 };
 
 type AdminSection =
@@ -55,10 +56,13 @@ const downloadCsv = (filename: string, lines: string[]) => {
   URL.revokeObjectURL(url);
 };
 
-export const AdminDashboard = ({ dbEnabled, isClientMode, categories, products, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods }: DashboardProps) => {
+export const AdminDashboard = ({ dbEnabled, isClientMode, categories, products, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods, initialSettings }: DashboardProps) => {
   const [active, setActive] = useState<AdminSection>('Dashboard');
   const [statusMessage, setStatusMessage] = useState('');
   const [registrantSearch, setRegistrantSearch] = useState('');
+  const [settings, setSettings] = useState<Record<string, string>>(initialSettings);
+  const [settingsSection, setSettingsSection] = useState<'contact' | 'payment' | 'legal' | 'branding' | 'store'>('contact');
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const [variantProductId, setVariantProductId] = useState(products[0]?.id ?? '');
   const [variantForm, setVariantForm] = useState({ name: '', sku: '', price: '0', stock: '0', sortOrder: '0', isDefault: false });
@@ -206,6 +210,23 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, categories, products, 
   const onLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
     window.location.href = '/admin/login';
+  };
+
+  const setSetting = (key: string, value: string) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const onSaveSettings = async (subset: Record<string, string>) => {
+    setSavingSettings(true);
+    try {
+      await submitJson('/api/admin/settings', 'POST', subset);
+      setSettings((prev) => ({ ...prev, ...subset }));
+      setStatusMessage('Settings saved successfully.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to save settings.');
+    } finally {
+      setSavingSettings(false);
+    }
   };
 
   const exportRegistrants = () => {
@@ -461,9 +482,154 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, categories, products, 
         ) : null}
 
         {active === 'Settings' ? (
-          <section className="rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-5">
+          <section className="space-y-4 rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-5">
             <h2 className="font-serif text-2xl text-[var(--color-ivory)]">Settings</h2>
-            <p className="mt-3 text-sm text-[var(--color-sand)]">Categories configured: {categories.length}</p>
+            {/* Sub-section navigation */}
+            <div className="flex flex-wrap gap-2 border-b border-[var(--color-gold-soft)] pb-3">
+              {(['contact', 'payment', 'legal', 'branding', 'store'] as const).map((sec) => (
+                <button
+                  key={sec}
+                  onClick={() => setSettingsSection(sec)}
+                  className={`rounded-full px-4 py-1.5 text-xs uppercase tracking-[0.14em] transition ${settingsSection === sec ? 'bg-[var(--color-gold)] text-[var(--color-ink)]' : 'border border-[var(--color-gold-soft)] text-[var(--color-sand)] hover:bg-white/5'}`}
+                >
+                  {sec === 'contact' ? 'Contact Info' : sec === 'payment' ? 'Payment Methods' : sec === 'legal' ? 'Legal Content' : sec === 'branding' ? 'Branding' : 'Store Operations'}
+                </button>
+              ))}
+            </div>
+
+            {/* 1. Contact Info */}
+            {settingsSection === 'contact' ? (
+              <div className="space-y-3">
+                <p className="text-xs text-[var(--color-sand)]">These values render on the contact page, footer, and emails.</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Support Message</label>
+                    <input className="input" value={settings['contact.supportMessage'] ?? ''} onChange={(e) => setSetting('contact.supportMessage', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Info Email</label>
+                    <input className="input" type="email" value={settings['contact.infoEmail'] ?? ''} onChange={(e) => setSetting('contact.infoEmail', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Support Email</label>
+                    <input className="input" type="email" value={settings['contact.supportEmail'] ?? ''} onChange={(e) => setSetting('contact.supportEmail', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Address</label>
+                    <input className="input" value={settings['contact.address'] ?? ''} onChange={(e) => setSetting('contact.address', e.target.value)} />
+                  </div>
+                </div>
+                <button className="btn-primary" disabled={savingSettings} onClick={() => onSaveSettings({ 'contact.supportMessage': settings['contact.supportMessage'] ?? '', 'contact.infoEmail': settings['contact.infoEmail'] ?? '', 'contact.supportEmail': settings['contact.supportEmail'] ?? '', 'contact.address': settings['contact.address'] ?? '' })}>
+                  {savingSettings ? 'Saving…' : 'Save Contact Info'}
+                </button>
+              </div>
+            ) : null}
+
+            {/* 2. Payment Methods */}
+            {settingsSection === 'payment' ? (
+              <div className="space-y-3">
+                <p className="text-xs text-[var(--color-sand)]">Toggle payment method availability. Changes saved here are stored in the DB settings table.</p>
+                {['paypal', 'venmo', 'cash-app', 'chime', 'zelle', 'apple-pay'].map((methodKey) => {
+                  const settingKey = `payment.${methodKey}.enabled`;
+                  const label = methodKey === 'cash-app' ? 'Cash App' : methodKey === 'apple-pay' ? 'Apple Pay' : methodKey.charAt(0).toUpperCase() + methodKey.slice(1);
+                  const enabled = settings[settingKey] !== 'false';
+                  return (
+                    <label key={methodKey} className="flex cursor-pointer items-center justify-between rounded-xl border border-[var(--color-border)] px-4 py-3">
+                      <span className="font-medium text-[var(--color-ivory)]">{label}</span>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-[var(--color-gold)]"
+                        checked={enabled}
+                        onChange={(e) => setSetting(settingKey, e.target.checked ? 'true' : 'false')}
+                      />
+                    </label>
+                  );
+                })}
+                <button className="btn-primary" disabled={savingSettings} onClick={() => {
+                  const subset: Record<string, string> = {};
+                  ['paypal', 'venmo', 'cash-app', 'chime', 'zelle', 'apple-pay'].forEach((k) => {
+                    subset[`payment.${k}.enabled`] = settings[`payment.${k}.enabled`] ?? 'true';
+                  });
+                  void onSaveSettings(subset);
+                }}>
+                  {savingSettings ? 'Saving…' : 'Save Payment Settings'}
+                </button>
+              </div>
+            ) : null}
+
+            {/* 3. Checkout Legal Content */}
+            {settingsSection === 'legal' ? (
+              <div className="space-y-3">
+                <p className="text-xs text-[var(--color-sand)]">These text blocks appear on the checkout flow and legal pages.</p>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Privacy / Data Usage Text (before submit)</label>
+                  <textarea className="input min-h-20" value={settings['legal.privacyText'] ?? ''} onChange={(e) => setSetting('legal.privacyText', e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Research Disclaimer Text (checkout acknowledgement)</label>
+                  <textarea className="input min-h-36" value={settings['legal.disclaimerText'] ?? ''} onChange={(e) => setSetting('legal.disclaimerText', e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Shipping Policy Text</label>
+                  <input className="input" value={settings['shipping.policyText'] ?? ''} onChange={(e) => setSetting('shipping.policyText', e.target.value)} />
+                </div>
+                <button className="btn-primary" disabled={savingSettings} onClick={() => onSaveSettings({ 'legal.privacyText': settings['legal.privacyText'] ?? '', 'legal.disclaimerText': settings['legal.disclaimerText'] ?? '', 'shipping.policyText': settings['shipping.policyText'] ?? '' })}>
+                  {savingSettings ? 'Saving…' : 'Save Legal Content'}
+                </button>
+              </div>
+            ) : null}
+
+            {/* 4. Branding Assets */}
+            {settingsSection === 'branding' ? (
+              <div className="space-y-3">
+                <p className="text-xs text-[var(--color-sand)]">Logo and image asset URLs. Upload files via the Upload tool and paste the returned URL here.</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Site Name</label>
+                    <input className="input" value={settings['branding.siteName'] ?? ''} onChange={(e) => setSetting('branding.siteName', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Primary Logo URL</label>
+                    <input className="input" placeholder="/images/brand/logo-primary.png" value={settings['branding.logoUrl'] ?? ''} onChange={(e) => setSetting('branding.logoUrl', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Footer Logo URL</label>
+                    <input className="input" placeholder="/images/brand/logo-alt.png" value={settings['branding.footerLogoUrl'] ?? ''} onChange={(e) => setSetting('branding.footerLogoUrl', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Default OG / Social Image URL</label>
+                    <input className="input" placeholder="/images/brand/og-image.png" value={settings['branding.ogImageUrl'] ?? ''} onChange={(e) => setSetting('branding.ogImageUrl', e.target.value)} />
+                  </div>
+                </div>
+                <button className="btn-primary" disabled={savingSettings} onClick={() => onSaveSettings({ 'branding.siteName': settings['branding.siteName'] ?? '', 'branding.logoUrl': settings['branding.logoUrl'] ?? '', 'branding.footerLogoUrl': settings['branding.footerLogoUrl'] ?? '', 'branding.ogImageUrl': settings['branding.ogImageUrl'] ?? '' })}>
+                  {savingSettings ? 'Saving…' : 'Save Branding'}
+                </button>
+              </div>
+            ) : null}
+
+            {/* 5. Store Operations */}
+            {settingsSection === 'store' ? (
+              <div className="space-y-3">
+                <p className="text-xs text-[var(--color-sand)]">Operational configuration for fulfillment and order thresholds.</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Fulfillment Timeframe (e.g. 24-48 hours)</label>
+                    <input className="input" value={settings['store.fulfillmentHours'] ?? ''} onChange={(e) => setSetting('store.fulfillmentHours', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Complimentary Kit Min Quantity</label>
+                    <input className="input" type="number" value={settings['store.kitThreshold'] ?? ''} onChange={(e) => setSetting('store.kitThreshold', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Free Shipping Threshold ($) — leave blank to disable</label>
+                    <input className="input" type="number" placeholder="0" value={settings['store.freeShippingThreshold'] ?? ''} onChange={(e) => setSetting('store.freeShippingThreshold', e.target.value)} />
+                  </div>
+                </div>
+                <button className="btn-primary" disabled={savingSettings} onClick={() => onSaveSettings({ 'store.fulfillmentHours': settings['store.fulfillmentHours'] ?? '', 'store.kitThreshold': settings['store.kitThreshold'] ?? '', 'store.freeShippingThreshold': settings['store.freeShippingThreshold'] ?? '' })}>
+                  {savingSettings ? 'Saving…' : 'Save Store Settings'}
+                </button>
+              </div>
+            ) : null}
           </section>
         ) : null}
       </div>

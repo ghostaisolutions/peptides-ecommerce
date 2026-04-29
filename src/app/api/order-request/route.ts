@@ -15,11 +15,14 @@ const schema = z.object({
   country: z.string().min(2),
   notes: z.string().optional(),
   paymentMethodId: z.string().min(2),
+  shippingMethodId: z.string().optional(),
+  shippingMethodLabel: z.string().optional(),
   acknowledgements: z.object({
     informationAccurate: z.literal(true),
     termsAccepted: z.literal(true),
     verificationAccepted: z.literal(true),
     ageConfirmed: z.literal(true),
+    researchDisclaimerAccepted: z.literal(true),
   }),
   items: z
     .array(

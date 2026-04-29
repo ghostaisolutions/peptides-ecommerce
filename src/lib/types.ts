@@ -134,6 +134,7 @@ export type OrderAcknowledgements = {
   termsAccepted: boolean;
   verificationAccepted: boolean;
   ageConfirmed: boolean;
+  researchDisclaimerAccepted: boolean;
 };
 
 export type OrderWorkflowStatus =
@@ -165,6 +166,8 @@ export type OrderRequest = {
   postalCode: string;
   country: string;
   paymentMethodId: string;
+  shippingMethodId?: string;
+  shippingMethodLabel?: string;
   notes?: string;
   acknowledgements: OrderAcknowledgements;
   items: Array<{
@@ -182,6 +185,8 @@ export type StoredOrderRequest = OrderRequest & {
   id: string;
   orderReference: string;
   paymentMethodLabel: string;
+  shippingMethodId?: string;
+  shippingMethodLabel?: string;
   status: OrderWorkflowStatus;
   conversionStatus: ConversionStatus;
   paymentInstructions?: string;
@@ -191,4 +196,11 @@ export type StoredOrderRequest = OrderRequest & {
   timeline: OrderTimeline;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SiteSetting = {
+  id: string;
+  key: string;
+  value: string;
+  section: string;
 };

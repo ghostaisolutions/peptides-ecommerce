@@ -698,3 +698,20 @@ export const ensureBaselineCatalogData = async () => {
     });
   }
 };
+
+export const ensureBaselineShippingMethods = async () => {
+  if (!hasDatabaseUrl) return;
+  const existing = await prisma!.shippingMethod.count();
+  if (existing > 0) return;
+
+  const defaultMethods = [
+    { name: 'USPS Standard', carrier: 'USPS', price: 0, eta: '3–5 business days', description: 'Standard ground shipping via USPS.', active: true, sortOrder: 0 },
+    { name: 'USPS Priority', carrier: 'USPS', price: 8.95, eta: '1–3 business days', description: 'Priority mail shipping via USPS.', active: true, sortOrder: 1 },
+    { name: 'UPS Ground', carrier: 'UPS', price: 0, eta: '3–5 business days', description: 'Ground shipping via UPS.', active: true, sortOrder: 2 },
+    { name: 'UPS 2-Day', carrier: 'UPS', price: 14.95, eta: '2 business days', description: 'Expedited 2-day shipping via UPS.', active: true, sortOrder: 3 },
+  ];
+
+  for (const method of defaultMethods) {
+    await prisma!.shippingMethod.create({ data: method });
+  }
+};

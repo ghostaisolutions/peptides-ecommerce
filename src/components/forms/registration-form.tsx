@@ -6,6 +6,7 @@ import { LegalAcknowledgement } from '@/components/forms/legal-acknowledgement';
 import type { OrderAcknowledgements } from '@/lib/types';
 
 const defaultAcknowledgements: OrderAcknowledgements = {
+  researchDisclaimerAccepted: false,
   informationAccurate: false,
   termsAccepted: false,
   verificationAccepted: false,
