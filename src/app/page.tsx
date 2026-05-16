@@ -1,12 +1,8 @@
 import Link from 'next/link';
 
-import { ProductGrid } from '@/components/commerce/product-grid';
 import { Hero } from '@/components/home/hero';
-import { AuthoritySection } from '@/components/sections/authority-section';
 import { KitShowcase } from '@/components/sections/KitShowcase';
 import { PremiumSpotlight } from '@/components/sections/premium-spotlight';
-import { TransparencySection } from '@/components/sections/transparency-section';
-import { TrustSignals } from '@/components/sections/trust-signals';
 import { DisclaimerNotice } from '@/components/ui/disclaimer-notice';
 import { FaqAccordion } from '@/components/ui/faq-accordion';
 import { categories, faqs } from '@/lib/data/site';
@@ -15,96 +11,96 @@ import { getFeaturedProducts } from '@/lib/utils/catalog';
 
 export const dynamic = 'force-dynamic';
 
+const trustPoints = [
+  {
+    title: 'Verified standards',
+    body: 'Batch documentation, COA access, and research-use positioning are built into the buying flow.',
+  },
+  {
+    title: 'Order review first',
+    body: 'Inventory, shipping details, and compliance acknowledgements are checked before payment instructions are sent.',
+  },
+  {
+    title: 'Discreet fulfillment',
+    body: 'Plain packaging, clear timelines, and confirmation emails keep every request easy to track.',
+  },
+];
+
+const orderSteps = [
+  ['Choose products', 'Select products and strengths from the catalog.'],
+  ['Submit request', 'Send shipping details and required acknowledgements.'],
+  ['Receive confirmation', 'We review availability and send payment instructions.'],
+];
+
 export default async function Home() {
   const [featuredProducts, settings] = await Promise.all([getFeaturedProducts(), getAllSettings()]);
   const bottleMockupsEnabled = settings['products.bottleMockupsEnabled'] === 'true';
 
   return (
-    <div className="space-y-16 md:space-y-20">
+    <div className="space-y-14 md:space-y-18">
       <div className="full-bleed">
         <Hero />
       </div>
 
-      <div className="pt-6 sm:pt-7 md:pt-8">
+      <div>
         <PremiumSpotlight products={featuredProducts} bottleMockupsEnabled={bottleMockupsEnabled} />
       </div>
 
-      <section>
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Featured Products</p>
-            <h2 className="section-title mt-2">Launch Products</h2>
-          </div>
-          <Link className="btn-secondary" href="/shop">
-            View Collection
-          </Link>
-        </div>
-        <ProductGrid products={featuredProducts} bottleMockupsEnabled={bottleMockupsEnabled} />
-      </section>
-
-      <AuthoritySection />
-
       <KitShowcase />
 
-      <section className="premium-surface-soft rounded-[1.7rem] p-7 lg:p-9">
-        <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Complimentary Kit</p>
-        <h2 className="section-title mt-2">Research Support Included</h2>
-        <p className="mt-3 max-w-3xl text-sm text-[var(--color-muted)]">
-          Every qualifying peptide order includes a complimentary research support kit.
-        </p>
-      </section>
-
-      <TransparencySection />
-
-      <section className="premium-surface-deep relative overflow-hidden rounded-[1.7rem] p-7 lg:p-9">
-        <div className="peptide-overlay peptide-overlay-soft absolute inset-0" />
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">How It Works</p>
-          <h2 className="section-title mt-2">Simple, Transparent Ordering</h2>
+      <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Why customers pause here</p>
+          <h2 className="section-title mt-2">Clear standards before checkout.</h2>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--color-muted)]">
+            The site is built around a confirmation-first workflow, so customers understand what they are ordering,
+            how it is reviewed, and what happens before fulfillment.
+          </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <article className="rounded-2xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-gold)]">Step 1</p>
-            <h3 className="mt-2 font-serif text-2xl text-[var(--color-text)]">Choose Your Products</h3>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">Add products to cart and submit your order request with shipping details.</p>
-          </article>
-          <article className="rounded-2xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-gold)]">Step 2</p>
-            <h3 className="mt-2 font-serif text-2xl text-[var(--color-text)]">Order Confirmation</h3>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">Our team verifies inventory and confirms your order details.</p>
-          </article>
-          <article className="rounded-2xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-gold)]">Step 3</p>
-            <h3 className="mt-2 font-serif text-2xl text-[var(--color-text)]">Secure Payment Instructions</h3>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">You receive payment instructions and shipping timeline to complete fulfillment.</p>
-          </article>
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          {trustPoints.map((point) => (
+            <article key={point.title} className="border-l border-[var(--color-gold)]/70 bg-black/15 px-5 py-4">
+              <h3 className="font-serif text-xl text-[var(--color-ivory)]">{point.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{point.body}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="premium-surface-soft relative overflow-hidden rounded-[1.7rem] p-7 lg:p-9">
-        <div className="peptide-overlay peptide-overlay-soft absolute inset-0" />
-        <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Why We Use Manual Payment</p>
-        <h2 className="section-title mt-2">Built for Accuracy and Fraud Protection</h2>
-        <p className="mt-4 max-w-3xl text-sm text-[var(--color-muted)]">
-          We use a confirmation-first workflow so every order is validated for product availability, shipping details, and compliance checks before payment is collected.
-          This reduces failed transactions, prevents fulfillment mistakes, and gives you a clear confirmation trail before you pay.
-        </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <p className="rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-3 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">Inventory Verified</p>
-          <p className="rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-3 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">Order Reviewed</p>
-          <p className="rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-3 text-xs uppercase tracking-[0.14em] text-[var(--color-muted)]">Secure Instructions Sent</p>
+      <section className="premium-surface-deep rounded-[1.7rem] p-7 lg:p-9">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Ordering flow</p>
+            <h2 className="section-title mt-2">Simple, transparent ordering</h2>
+            <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+              Every request is reviewed before payment, which keeps inventory, shipping, and acknowledgements aligned.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {orderSteps.map(([title, body], index) => (
+              <article key={title} className="rounded-xl border border-[var(--color-border)] bg-black/20 p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-gold)]">Step {index + 1}</p>
+                <h3 className="mt-3 font-serif text-2xl text-[var(--color-text)]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="premium-surface-deep relative overflow-hidden rounded-[1.7rem] p-7 lg:p-9">
-        <div className="peptide-overlay peptide-overlay-soft absolute inset-0" />
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Category Preview</p>
-          <h2 className="section-title mt-2">Navigate by Research Focus</h2>
+      <section>
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Shop by focus</p>
+            <h2 className="section-title mt-2">Navigate by research category</h2>
+          </div>
+          <Link href="/shop" className="btn-secondary">
+            Browse Shop
+          </Link>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {categories.map((category) => (
-            <Link key={category.slug} href={`/shop/${category.slug}`} className="group rounded-2xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-5 transition hover:border-[var(--color-gold)] hover:bg-[rgba(0,0,0,0.35)]">
+            <Link key={category.slug} href={`/shop/${category.slug}`} className="group border border-[var(--color-border)] bg-black/15 p-5 transition hover:border-[var(--color-gold)] hover:bg-black/25">
               <h3 className="font-serif text-2xl text-[var(--color-text)]">{category.name}</h3>
               <p className="mt-2 text-sm text-[var(--color-muted)]">{category.description}</p>
               <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">{category.isFuture ? 'Coming Soon' : 'Explore Category'}</p>
@@ -113,11 +109,9 @@ export default async function Home() {
         </div>
       </section>
 
-      <TrustSignals />
-
       <section>
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">FAQ Preview</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">FAQ</p>
           <h2 className="section-title mt-2">Frequently Asked</h2>
           <p className="mt-2 max-w-3xl text-sm text-[var(--color-muted)]">Questions on shipping times, payment flow, and order tracking are answered below.</p>
         </div>

@@ -19,22 +19,22 @@ export const PremiumSpotlight = ({
   }
 
   return (
-    <section className="premium-surface relative overflow-hidden rounded-[1.9rem] p-7 lg:p-9">
-      <div className="absolute right-[-120px] top-[-120px] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.32),transparent_65%)]" />
-      <div className="absolute left-[-80px] bottom-[-80px] h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(248,245,240,0.1),transparent_68%)]" />
-
-      <div className="relative">
+    <section className="relative overflow-hidden border-y border-[var(--color-border)] py-12 md:py-16">
+      <div>
         <p className="text-xs uppercase tracking-[0.28em] text-[var(--color-gold)]">Premium Product Spotlight</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-          <h2 className="section-title max-w-2xl">Branded bottle presentation for a stronger premium feel.</h2>
+          <h2 className="section-title max-w-2xl">Featured Research Compounds</h2>
           <Link href="/shop" className="btn-primary">
-            Explore Full Collection
+            View Collection
           </Link>
         </div>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--color-muted)]">
+          Start with the products customers most often compare first, then choose the strength that fits the request.
+        </p>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {spotlight.map((product) => (
-            <article key={product.id} className="group rounded-2xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.18)] p-5">
+            <article key={product.id} className="group grid gap-5 rounded-[1.35rem] border border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] p-4 md:grid-cols-[0.9fr_1fr] md:items-center">
               {bottleMockupsEnabled ? (
                 <PremiumBottleMockup
                   imageSrc={product.images.primary}
@@ -55,14 +55,16 @@ export const PremiumSpotlight = ({
                   />
                 </div>
               )}
-              <p className="mt-4 text-[11px] uppercase tracking-[0.24em] text-[var(--color-gold)]">{product.category.replace('-', ' ')}</p>
-              <h3 className="mt-2 font-serif text-3xl text-[var(--color-ivory)]">{product.name}</h3>
-              <p className="mt-2 text-sm text-[var(--color-muted)]">{product.shortDescription}</p>
-              <div className="mt-4 flex items-center justify-between">
-                <p className="font-serif text-3xl text-[var(--color-ivory)]">{currency(product.price)}</p>
-                <Link href={`/product/${product.slug}`} className="btn-secondary">
-                  View Product
-                </Link>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--color-gold)]">{product.category.replace('-', ' ')}</p>
+                <h3 className="mt-2 font-serif text-3xl text-[var(--color-ivory)]">{product.name}</h3>
+                <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">{product.shortDescription}</p>
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-serif text-3xl text-[var(--color-ivory)]">{currency(product.price)}</p>
+                  <Link href={`/product/${product.slug}`} className="btn-secondary">
+                    View Product
+                  </Link>
+                </div>
               </div>
             </article>
           ))}
