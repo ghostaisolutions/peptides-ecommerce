@@ -45,6 +45,16 @@ export const calculateAge = (birth: Date): number => {
   return age;
 };
 
+export const formatDateOfBirthForStorage = (dob: string): string | null => {
+  const parsedDob = parseDateOfBirth(dob);
+  if (!parsedDob) return null;
+
+  const year = parsedDob.getFullYear();
+  const month = String(parsedDob.getMonth() + 1).padStart(2, '0');
+  const day = String(parsedDob.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const isAtLeastMinimumAge = (dob: string, minimumAge = MINIMUM_AGE): boolean => {
   const parsedDob = parseDateOfBirth(dob);
   if (!parsedDob) return false;

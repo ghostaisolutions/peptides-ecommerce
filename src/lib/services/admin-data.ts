@@ -7,6 +7,7 @@ import {
   Prisma,
 } from '@prisma/client';
 
+import { formatDateOfBirthForStorage } from '@/lib/age-gate';
 import { categories, faqs, legal, products } from '@/lib/data/site';
 import { hasDatabaseUrl, prisma } from '@/lib/db';
 import type { ProductImageMap } from '@/lib/types';
@@ -574,12 +575,17 @@ export const createAgeGateRegistrant = async (input: {
   if (!hasDatabaseUrl) {
     return { ok: true, persisted: false, message: 'DATABASE_URL not configured.' };
   }
+  const normalizedDob = formatDateOfBirthForStorage(input.dob);
+  if (!normalizedDob) {
+    return { ok: false, persisted: false, message: 'Invalid date of birth.' };
+  }
+
   try {
     await prisma!.ageGateRegistrant.create({
       data: {
         firstName: input.firstName,
         email: input.email,
-        dob: new Date(input.dob),
+        dob: new Date(`${normalizedDob}T12:00:00`),
         verifiedAt: new Date(input.verifiedAt),
       },
     });

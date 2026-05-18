@@ -9,6 +9,26 @@ const EXPIRY_DAYS = 30;
 
 const COOKIE_KEY = 'pv_age_gate_expires';
 
+const monthOptions = [
+  ['01', 'January'],
+  ['02', 'February'],
+  ['03', 'March'],
+  ['04', 'April'],
+  ['05', 'May'],
+  ['06', 'June'],
+  ['07', 'July'],
+  ['08', 'August'],
+  ['09', 'September'],
+  ['10', 'October'],
+  ['11', 'November'],
+  ['12', 'December'],
+];
+const dayOptions = Array.from({ length: 31 }, (_, index) => String(index + 1).padStart(2, '0'));
+const yearOptions = Array.from(
+  { length: new Date().getFullYear() - 1899 },
+  (_, index) => String(new Date().getFullYear() - index),
+);
+
 const readCookieExpiry = (): number | null => {
   if (typeof document === 'undefined') return null;
   const escapedKey = COOKIE_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -87,9 +107,12 @@ export const AgeGateModal = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
-  const [dob, setDob] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [confirmed21Plus, setConfirmed21Plus] = useState(false);
   const [error, setError] = useState('');
+  const dob = birthMonth && birthDay && birthYear ? `${birthYear}-${birthMonth}-${birthDay}` : '';
 
   useEffect(() => {
     const verified = isVerified();
@@ -346,20 +369,61 @@ export const AgeGateModal = () => {
           <label htmlFor="dob" className="block text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
             Date of Birth
           </label>
-          <input
-            id="dob"
-            type="text"
-            name="dob"
-            value={dob}
-            onChange={(e) => {
-              setDob(e.target.value);
-              setError('');
-            }}
-            placeholder="MM/DD/YYYY, MMDDYYYY, or YYYYMMDD"
-            inputMode="numeric"
-            autoComplete="bday"
-            className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.35)] px-4 py-3 text-sm text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] [color-scheme:dark]"
-          />
+          <input type="hidden" name="dob" value={dob} />
+          <div className="mt-2 grid grid-cols-[1.2fr_0.8fr_1fr] gap-2">
+            <select
+              id="dob"
+              value={birthMonth}
+              onChange={(e) => {
+                setBirthMonth(e.target.value);
+                setError('');
+              }}
+              autoComplete="bday-month"
+              aria-label="Birth month"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.35)] px-3 py-3 text-sm text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] [color-scheme:dark]"
+            >
+              <option value="">Month</option>
+              {monthOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={birthDay}
+              onChange={(e) => {
+                setBirthDay(e.target.value);
+                setError('');
+              }}
+              autoComplete="bday-day"
+              aria-label="Birth day"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.35)] px-3 py-3 text-sm text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] [color-scheme:dark]"
+            >
+              <option value="">Day</option>
+              {dayOptions.map((day) => (
+                <option key={day} value={day}>
+                  {Number(day)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={birthYear}
+              onChange={(e) => {
+                setBirthYear(e.target.value);
+                setError('');
+              }}
+              autoComplete="bday-year"
+              aria-label="Birth year"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.35)] px-3 py-3 text-sm text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] [color-scheme:dark]"
+            >
+              <option value="">Year</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <label className="mt-5 flex items-start gap-2 text-xs text-[var(--color-sand)]">
