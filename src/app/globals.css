@@ -24,6 +24,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-sans), sans-serif;
   background:
@@ -32,6 +36,7 @@ body {
     linear-gradient(180deg, #7a0c12 0%, #1a1a1a 100%);
   color: var(--color-text);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .font-serif {
@@ -177,4 +182,32 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.7s ease-out both;
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(calc(100% - 1.25rem), var(--container-max));
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 12vw, 2.75rem);
+    line-height: 1;
+  }
+
+  .input,
+  select,
+  textarea {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    min-height: 46px;
+    width: 100%;
+    padding: 0.82rem 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
 }

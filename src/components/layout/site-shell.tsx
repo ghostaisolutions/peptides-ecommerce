@@ -16,7 +16,7 @@ export const SiteShell = ({ children }: { children: React.ReactNode }) => {
     <CartProvider>
       {shouldShowAgeGate ? <AgeGateModal /> : null}
       <Navbar />
-      <main className="container py-8 md:py-12">{children}</main>
+      <main className="container py-6 md:py-12">{children}</main>
       <Footer />
     </CartProvider>
   );

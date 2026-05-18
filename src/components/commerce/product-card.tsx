@@ -32,18 +32,18 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
     selectedVariant.stock > 0;
 
   return (
-    <article className="group premium-surface rounded-[1.35rem] p-4 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.34)]">
+    <article className="group premium-surface rounded-2xl p-3.5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.34)] sm:rounded-[1.35rem] sm:p-4">
       {bottleMockupsEnabled ? (
         <PremiumBottleMockup
           imageSrc={primaryImage}
           secondaryImageSrc={secondaryImage}
           alt={product.name}
           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 45vw, 30vw"
-          className="aspect-[4/5]"
+          className="aspect-[5/4] sm:aspect-[4/5]"
           useGroupHover
         />
       ) : (
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)]">
+        <div className="relative aspect-[5/4] overflow-hidden rounded-[1.1rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] sm:aspect-[4/5]">
           <SafeImage
             src={primaryImage}
             alt={product.name}
@@ -56,12 +56,12 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
 
       <div className="mt-4">
         <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--color-gold)]">{product.category.replace('-', ' ')}</p>
-        <h3 className="mt-2 font-serif text-2xl text-[var(--color-text)]">{product.name}</h3>
+        <h3 className="mt-2 font-serif text-[1.65rem] leading-tight text-[var(--color-text)] sm:text-2xl">{product.name}</h3>
         <p className="mt-2 text-sm text-[var(--color-muted)]">{product.subtitle}</p>
         {product.includesComplimentaryKit ? <p className="mt-3 text-xs uppercase tracking-[0.15em] text-[var(--color-gold)]">Complimentary kit included</p> : null}
       </div>
 
-      <p className="mt-4 text-sm text-[var(--color-muted)]">{product.shortDescription}</p>
+      <p className="mt-4 text-sm leading-6 text-[var(--color-muted)]">{product.shortDescription}</p>
       <div className="mt-4 flex items-end justify-between">
         <p className="font-serif text-2xl text-[var(--color-text)]">{currency(selectedVariant.price)}</p>
         {selectedVariant.compareAtPrice ? (
@@ -113,16 +113,16 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
       {mustChooseVariant && !selectedVariantId ? <p className="mt-2 text-xs text-[var(--color-muted)]">Choose a strength before adding to cart.</p> : null}
       {selectedVariant.stock <= 0 ? <p className="mt-2 text-xs text-red-300">Selected strength is out of stock.</p> : null}
 
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4 flex flex-col gap-2 min-[420px]:flex-row min-[420px]:gap-3">
         <button
-          className="flex-1 rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-depth)_75%,var(--color-brand-red)_25%)] px-4 py-3 text-sm uppercase tracking-[0.14em] text-[var(--color-text)] transition hover:border-[var(--color-gold)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-11 flex-1 rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-depth)_75%,var(--color-brand-red)_25%)] px-4 py-3 text-xs uppercase tracking-[0.12em] text-[var(--color-text)] transition hover:border-[var(--color-gold)] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:tracking-[0.14em]"
           disabled={!canAddToCart}
           onClick={() => addItem(product.id, selectedVariant.id, 1)}
         >
           Add to Cart
         </button>
         <Link
-          className="rounded-xl bg-[var(--color-gold)] px-4 py-3 text-sm uppercase tracking-[0.14em] text-[var(--color-depth)]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--color-gold)] px-4 py-3 text-xs uppercase tracking-[0.12em] text-[var(--color-depth)] sm:text-sm sm:tracking-[0.14em]"
           href={`/product/${product.slug}`}
         >
           View

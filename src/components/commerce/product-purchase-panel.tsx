@@ -54,14 +54,14 @@ export const ProductPurchasePanel = ({ product, selectedVariantId, onSelectedVar
   };
 
   return (
-    <div className="premium-surface rounded-[1.6rem] p-8">
+    <div className="premium-surface rounded-2xl p-4 sm:rounded-[1.6rem] sm:p-8">
       <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">{product.category.replace('-', ' ')}</p>
-      <h1 className="mt-3 font-serif text-4xl text-[var(--color-text)] md:text-5xl">{product.name}</h1>
-      <p className="mt-3 text-lg text-[var(--color-muted)]">{product.subtitle}</p>
+      <h1 className="mt-3 font-serif text-[2.35rem] leading-none text-[var(--color-text)] md:text-5xl">{product.name}</h1>
+      <p className="mt-3 text-base text-[var(--color-muted)] sm:text-lg">{product.subtitle}</p>
       <p className="mt-5 text-[var(--color-muted)]">{product.shortDescription}</p>
 
       <div className="mt-6 flex items-end gap-3">
-        <p className="font-serif text-4xl text-[var(--color-text)]">{currency(selectedVariant.price)}</p>
+        <p className="font-serif text-[2.25rem] text-[var(--color-text)] sm:text-4xl">{currency(selectedVariant.price)}</p>
         {selectedVariant.compareAtPrice ? <p className="pb-1 text-[var(--color-muted)] line-through">{currency(selectedVariant.compareAtPrice)}</p> : null}
       </div>
 

@@ -37,7 +37,7 @@ export default async function Home() {
   const bottleMockupsEnabled = settings['products.bottleMockupsEnabled'] === 'true';
 
   return (
-    <div className="space-y-14 md:space-y-18">
+    <div className="space-y-10 md:space-y-18">
       <div className="full-bleed">
         <Hero />
       </div>
@@ -67,7 +67,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="premium-surface-deep rounded-[1.7rem] p-7 lg:p-9">
+      <section className="premium-surface-deep rounded-2xl p-4 sm:p-7 lg:p-9">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Ordering flow</p>
@@ -94,7 +94,7 @@ export default async function Home() {
             <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Shop by focus</p>
             <h2 className="section-title mt-2">Navigate by research category</h2>
           </div>
-          <Link href="/shop" className="btn-secondary">
+          <Link href="/shop" className="btn-secondary sm:w-auto">
             Browse Shop
           </Link>
         </div>

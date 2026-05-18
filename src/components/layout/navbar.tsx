@@ -63,9 +63,9 @@ export const Navbar = () => {
     <header className="sticky top-0 z-50 bg-[rgba(26,26,26,0.72)] backdrop-blur-xl">
       <TrustBar />
       <div className="border-b border-[rgba(212,175,55,0.18)]">
-        <div className="container flex items-center justify-between gap-2 py-2.5 sm:gap-3 sm:py-3">
-          <Link href="/" className="flex items-center gap-2.5 sm:gap-3">
-            <span className="relative h-9 w-9 overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-depth)] sm:h-10 sm:w-10">
+        <div className="container flex items-center justify-between gap-2 py-2 sm:gap-3 sm:py-3">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-depth)] sm:h-10 sm:w-10">
               <SafeImage
                 src={siteImages.brand.logo}
                 alt={`${siteConfig.brandName} logo`}
@@ -75,7 +75,7 @@ export const Navbar = () => {
                 fallbackLabel="Logo"
               />
             </span>
-            <span className="font-serif text-lg tracking-wide text-[var(--color-text)] sm:text-xl">{siteConfig.brandName}</span>
+            <span className="truncate font-serif text-base tracking-wide text-[var(--color-text)] min-[390px]:text-lg sm:text-xl">{siteConfig.brandName}</span>
           </Link>
 
           <nav className="hidden items-center gap-5 lg:flex">
@@ -90,14 +90,14 @@ export const Navbar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <div className="hidden lg:flex">
               <Link href="/register" className="btn-secondary">
                 New Customer
               </Link>
             </div>
-            <Link href="/cart" className="btn-primary inline-flex px-3 py-2 text-[10px] tracking-[0.13em] sm:px-4 sm:py-2.5 sm:text-[11px]">
-              Cart ({cartCount})
+            <Link href="/cart" className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-[var(--color-gold)] px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ink)] transition hover:brightness-110 sm:px-4 sm:text-[11px] sm:tracking-[0.13em]">
+              <span className="hidden min-[360px]:inline">Cart&nbsp;</span>({cartCount})
             </Link>
             <button
               type="button"
