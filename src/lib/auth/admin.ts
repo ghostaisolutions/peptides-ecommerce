@@ -51,7 +51,14 @@ export const validateAdminPassword = (password: string) => {
     return false;
   }
 
-  return password === configuredPassword;
+  const provided = Buffer.from(password);
+  const expected = Buffer.from(configuredPassword);
+
+  if (provided.length !== expected.length) {
+    return false;
+  }
+
+  return timingSafeEqual(provided, expected);
 };
 
 export const createAdminSessionToken = () => {
