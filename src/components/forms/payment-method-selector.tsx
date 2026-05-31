@@ -1,8 +1,7 @@
 import type { PaymentMethod } from '@/lib/types';
-import { ApplePayIcon, CashAppIcon, ChimeIcon, PayPalIcon, VenmoIcon, ZelleIcon } from '@/components/ui/payment-icons';
+import { ApplePayIcon, CashAppIcon, ChimeIcon, VenmoIcon, ZelleIcon } from '@/components/ui/payment-icons';
 
 const IconByMethod: Record<string, React.ComponentType<{ size?: number }>> = {
-  paypal: PayPalIcon,
   venmo: VenmoIcon,
   'cash-app': CashAppIcon,
   chime: ChimeIcon,

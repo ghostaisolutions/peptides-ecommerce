@@ -117,7 +117,17 @@ export const createAdminProduct = async (input: ProductInput) => {
     return { ok: false, message: 'DATABASE_URL not configured. Use local seed data mode.' };
   }
 
-  const category = await prisma!.category.findUnique({ where: { slug: input.categorySlug } });
+  const staticCategory = categories.find((entry) => entry.slug === input.categorySlug);
+  const category = await prisma!.category.upsert({
+    where: { slug: input.categorySlug },
+    update: {},
+    create: {
+      name: staticCategory?.name ?? input.categorySlug,
+      slug: input.categorySlug,
+      description: staticCategory?.description ?? 'Storefront products.',
+      isFuture: staticCategory?.isFuture ?? false,
+    },
+  });
   if (!category) {
     return { ok: false, message: 'Category not found.' };
   }
@@ -141,7 +151,24 @@ export const createAdminProduct = async (input: ProductInput) => {
     category: { connect: { id: category.id } },
   };
 
-  const created = await prisma!.product.create({ data, include: { category: true, variants: true } });
+  const created = await prisma!.product.create({
+    data: {
+      ...data,
+      variants: {
+        create: {
+          name: 'Standard',
+          sku: input.sku,
+          price: input.price,
+          compareAtPrice: input.compareAtPrice ?? null,
+          stock: input.stockQuantity,
+          active: input.isActive ?? true,
+          isDefault: true,
+          sortOrder: 0,
+        },
+      },
+    },
+    include: { category: true, variants: true },
+  });
   return {
     ok: true,
     message: 'Product created.',

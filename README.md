@@ -82,7 +82,7 @@ Set:
 NEXT_PUBLIC_DISABLE_CATEGORIES="true"
 ```
 
-When enabled, `/shop` displays all active products on one page instead of category navigation.
+The Peppers & Vibes storefront keeps categories disabled so `/shop` displays all active products on one page instead of category navigation.
 
 ## Client Handoff Mode
 

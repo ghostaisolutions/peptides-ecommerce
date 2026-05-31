@@ -198,7 +198,7 @@ export const CheckoutForm = ({
   return (
     <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="space-y-5">
-        <div className="-mx-2 flex gap-2 overflow-x-auto px-2 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           {stepLabels.map((label, index) => {
             const isActive = index === step;
             const isComplete = index < step;
@@ -206,10 +206,10 @@ export const CheckoutForm = ({
             return (
               <div
                 key={label}
-                className={`min-w-[11rem] rounded-xl border px-4 py-3 text-xs uppercase tracking-[0.13em] transition sm:min-w-0 sm:tracking-[0.16em] ${isActive ? 'border-[var(--color-gold)] bg-[rgba(212,175,55,0.15)] text-[var(--color-text)] shadow-[0_0_18px_rgba(212,175,55,0.2)]' : isComplete ? 'border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] text-[var(--color-text)]' : 'border-[var(--color-border)] bg-transparent text-[var(--color-muted)]'}`}
+                className={`min-w-0 rounded-xl border px-3 py-3 text-[10px] uppercase tracking-[0.1em] transition sm:px-4 sm:text-xs sm:tracking-[0.16em] ${isActive ? 'border-[var(--color-gold)] bg-[rgba(212,175,55,0.15)] text-[var(--color-text)] shadow-[0_0_18px_rgba(212,175,55,0.2)]' : isComplete ? 'border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] text-[var(--color-text)]' : 'border-[var(--color-border)] bg-transparent text-[var(--color-muted)]'}`}
               >
                 <span className="block text-[10px] text-[var(--color-gold)]">Step {index + 1}</span>
-                <span className="mt-1 block">{label}</span>
+                <span className="mt-1 block leading-snug">{label}</span>
               </div>
             );
           })}

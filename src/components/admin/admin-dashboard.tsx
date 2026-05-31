@@ -655,7 +655,7 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
                     'store.fulfillmentHours': settings['store.fulfillmentHours'] ?? '',
                     'store.kitThreshold': settings['store.kitThreshold'] ?? '',
                     'store.freeShippingThreshold': settings['store.freeShippingThreshold'] ?? '',
-                    'store.disableCategories': settings['store.disableCategories'] ?? 'false',
+                    'store.disableCategories': settings['store.disableCategories'] ?? 'true',
                     'products.bottleMockupsEnabled': settings['products.bottleMockupsEnabled'] ?? 'false',
                   })}
                 >

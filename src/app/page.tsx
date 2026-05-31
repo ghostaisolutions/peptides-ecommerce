@@ -1,11 +1,9 @@
-import Link from 'next/link';
-
 import { Hero } from '@/components/home/hero';
 import { KitShowcase } from '@/components/sections/KitShowcase';
 import { PremiumSpotlight } from '@/components/sections/premium-spotlight';
 import { DisclaimerNotice } from '@/components/ui/disclaimer-notice';
 import { FaqAccordion } from '@/components/ui/faq-accordion';
-import { categories, faqs } from '@/lib/data/site';
+import { faqs } from '@/lib/data/site';
 import { getAllSettings } from '@/lib/services/settings';
 import { getFeaturedProducts } from '@/lib/utils/catalog';
 
@@ -85,27 +83,6 @@ export default async function Home() {
               </article>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section>
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gold)]">Shop by focus</p>
-            <h2 className="section-title mt-2">Navigate by research category</h2>
-          </div>
-          <Link href="/shop" className="btn-secondary sm:w-auto">
-            Browse Shop
-          </Link>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {categories.map((category) => (
-            <Link key={category.slug} href={`/shop/${category.slug}`} className="group border border-[var(--color-border)] bg-black/15 p-5 transition hover:border-[var(--color-gold)] hover:bg-black/25">
-              <h3 className="font-serif text-2xl text-[var(--color-text)]">{category.name}</h3>
-              <p className="mt-2 text-sm text-[var(--color-muted)]">{category.description}</p>
-              <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">{category.isFuture ? 'Coming Soon' : 'Explore Category'}</p>
-            </Link>
-          ))}
         </div>
       </section>
 

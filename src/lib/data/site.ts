@@ -309,13 +309,6 @@ export const faqs: FaqItem[] = [
 
 export const paymentMethods: PaymentMethod[] = [
   {
-    id: 'paypal',
-    label: 'PayPal',
-    description: 'Receive invoice/payment instructions for PayPal after order review.',
-    enabled: true,
-    mode: 'invoice',
-  },
-  {
     id: 'venmo',
     label: 'Venmo',
     description: 'Receive Venmo payment instructions after order review.',
