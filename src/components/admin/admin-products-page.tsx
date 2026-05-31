@@ -75,6 +75,31 @@ const emptyForm = (defaultCategory: string): FormState => ({
   images: [],
 });
 
+type ApiErrorPayload = {
+  error?: string | { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
+};
+
+const parseOptionalMoney = (value: string) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const getApiErrorMessage = (payload: ApiErrorPayload, fallback: string) => {
+  if (typeof payload.error === 'string') return payload.error;
+
+  const fieldErrors = payload.error?.fieldErrors;
+  if (fieldErrors) {
+    const firstField = Object.entries(fieldErrors).find(([, messages]) => messages.length > 0);
+    if (firstField) {
+      const [field, messages] = firstField;
+      return `${field}: ${messages[0]}`;
+    }
+  }
+
+  const formError = payload.error?.formErrors?.[0];
+  return formError ?? fallback;
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export const AdminProductsPage = ({
@@ -225,7 +250,7 @@ export const AdminProductsPage = ({
         shortDescription: form.shortDescription,
         longDescription: form.longDescription,
         price: parseFloat(form.price),
-        compareAtPrice: form.compareAtPrice ? parseFloat(form.compareAtPrice) : null,
+        compareAtPrice: parseOptionalMoney(form.compareAtPrice),
         stockQuantity: parseInt(form.stockQuantity, 10),
         categorySlug: form.categorySlug,
         badge: form.badge || null,
@@ -240,8 +265,8 @@ export const AdminProductsPage = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const json = await res.json() as { success?: boolean; data?: Product; error?: string };
-        if (!res.ok) throw new Error(json.error ?? 'Failed to create product.');
+        const json = await res.json() as ({ success?: boolean; data?: Product } & ApiErrorPayload);
+        if (!res.ok) throw new Error(getApiErrorMessage(json, 'Failed to create product.'));
         // Refetch to get the full object with id
         const refreshed = await fetch('/api/admin/products');
         const rJson = await refreshed.json() as { data: Product[] };
@@ -253,8 +278,8 @@ export const AdminProductsPage = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const json = await res.json() as { success?: boolean; data?: Product; error?: string };
-        if (!res.ok) throw new Error(json.error ?? 'Failed to update product.');
+        const json = await res.json() as ({ success?: boolean; data?: Product } & ApiErrorPayload);
+        if (!res.ok) throw new Error(getApiErrorMessage(json, 'Failed to update product.'));
         // Optimistic update using returned product or patch
         if (json.data) {
           setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? json.data! : p)));

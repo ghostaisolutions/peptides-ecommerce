@@ -4,6 +4,11 @@ import { z } from 'zod';
 import { isAdminAuthenticated } from '@/lib/auth/admin';
 import { createAdminProduct, getAdminProducts } from '@/lib/services/admin-data';
 
+const optionalCompareAtPrice = z.preprocess(
+  (value) => (value === '' || value === 0 || value === '0' ? null : value),
+  z.coerce.number().positive().nullable().optional(),
+);
+
 const createSchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
@@ -18,7 +23,7 @@ const createSchema = z.object({
   isFeatured: z.coerce.boolean().optional(),
   includesComplimentaryKit: z.coerce.boolean().optional(),
   images: z.array(z.string().min(1)).optional(),
-  compareAtPrice: z.coerce.number().positive().optional().nullable(),
+  compareAtPrice: optionalCompareAtPrice,
   badge: z.string().optional().nullable(),
 });
 
