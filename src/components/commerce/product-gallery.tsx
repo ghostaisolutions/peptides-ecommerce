@@ -36,7 +36,7 @@ export const ProductGallery = ({ productName, images, bottleMockupsEnabled }: Pr
             src={activeImage}
             alt={productName}
             sizes="(max-width: 1024px) 100vw, 55vw"
-            className="object-cover"
+            className="object-contain p-3"
             priority
             fallbackLabel="Product image"
           />
@@ -59,7 +59,7 @@ export const ProductGallery = ({ productName, images, bottleMockupsEnabled }: Pr
                 src={image}
                 alt={`${productName} thumbnail ${index + 1}`}
                 sizes="120px"
-                className="object-cover"
+                className="object-contain p-1"
                 fallbackLabel="Thumb"
               />
             </button>

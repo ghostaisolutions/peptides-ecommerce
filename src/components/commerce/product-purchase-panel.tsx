@@ -33,6 +33,7 @@ export const ProductPurchasePanel = ({ product, selectedVariantId, onSelectedVar
   const mustChooseVariant = requiresVariantSelection(product);
   const hasSelectedVariant = !mustChooseVariant || Boolean(effectiveSelectedVariantId);
   const variantSelectValue = effectiveSelectedVariantId || selectedVariant.id;
+  const canAddToCart = accepted && hasSelectedVariant;
 
   const setVariantId = (variantId: string) => {
     if (onSelectedVariantIdChange) {
@@ -47,7 +48,7 @@ export const ProductPurchasePanel = ({ product, selectedVariantId, onSelectedVar
   };
 
   const onAddToCart = () => {
-    if (!accepted || !hasSelectedVariant || selectedVariant.stock <= 0) return;
+    if (!canAddToCart) return;
 
     addItem(product.id, selectedVariant.id, quantity);
     setAdded(true);
@@ -78,10 +79,7 @@ export const ProductPurchasePanel = ({ product, selectedVariantId, onSelectedVar
             </option>
           ))}
         </select>
-        <p className="mt-2 text-xs text-[var(--color-muted)]">Stock: {selectedVariant.stock}</p>
-        <p className="mt-1 text-xs text-[var(--color-muted)]">SKU: {selectedVariant.sku}</p>
         {mustChooseVariant && !effectiveSelectedVariantId ? <p className="mt-2 text-xs text-[var(--color-muted)]">Please choose a strength before adding to cart.</p> : null}
-        {selectedVariant.stock <= 0 ? <p className="mt-2 text-xs text-red-300">Selected strength is out of stock.</p> : null}
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -137,13 +135,18 @@ export const ProductPurchasePanel = ({ product, selectedVariantId, onSelectedVar
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button className="btn-primary flex-1" type="button" disabled={!accepted || !hasSelectedVariant || selectedVariant.stock <= 0} onClick={onAddToCart}>
+        <button className="btn-primary flex-1" type="button" disabled={!canAddToCart} onClick={onAddToCart}>
           {added ? 'Added to Cart' : 'Add to Cart'}
         </button>
         <Link className="btn-secondary flex-1 text-center" href="/cart">
           View Cart
         </Link>
       </div>
+      {added ? (
+        <p className="mt-3 rounded-xl border border-[rgba(74,222,128,0.35)] bg-[rgba(22,101,52,0.18)] px-4 py-3 text-sm text-green-200" role="status">
+          Added to cart successfully.
+        </p>
+      ) : null}
 
       <p className="mt-4 text-sm text-[var(--color-muted)]">Orders are subject to review and confirmation before fulfillment details are provided.</p>
     </div>

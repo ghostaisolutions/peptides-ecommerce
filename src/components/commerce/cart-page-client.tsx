@@ -34,7 +34,7 @@ export const CartPageClient = ({ catalog }: { catalog: Product[] }) => {
                         src={getVariantDisplayImage(item.product, item.variant)}
                         alt={item.product.name}
                         sizes="96px"
-                        className="object-cover"
+                        className="object-contain p-1"
                         fallbackLabel="Product"
                       />
                     </div>

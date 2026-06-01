@@ -81,10 +81,6 @@ const buildServerOrder = async (data: z.infer<typeof schema>): Promise<OrderRequ
       throw new Error(`No active variant is available for ${product.name}.`);
     }
 
-    if (variant.stock < item.quantity) {
-      throw new Error(`${product.name} (${variant.name}) has only ${variant.stock} available.`);
-    }
-
     return {
       product,
       variant,
@@ -144,7 +140,7 @@ const buildServerOrder = async (data: z.infer<typeof schema>): Promise<OrderRequ
 };
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

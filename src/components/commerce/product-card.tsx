@@ -19,6 +19,7 @@ import {
 export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Product; bottleMockupsEnabled: boolean }) => {
   const { addItem } = useCart();
   const [ack, setAck] = useState(false);
+  const [added, setAdded] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(() => getInitialVariantSelection(product));
   const secondaryImage = product.images.hover ?? product.images.gallery?.[0];
   const variants = getActiveVariants(product);
@@ -28,8 +29,7 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
   const variantSelectValue = selectedVariantId || selectedVariant.id;
   const canAddToCart =
     ack &&
-    (!mustChooseVariant || Boolean(selectedVariantId)) &&
-    selectedVariant.stock > 0;
+    (!mustChooseVariant || Boolean(selectedVariantId));
 
   return (
     <article className="group premium-surface rounded-2xl p-3.5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.34)] sm:rounded-[1.35rem] sm:p-4">
@@ -48,7 +48,7 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
             src={primaryImage}
             alt={product.name}
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 45vw, 30vw"
-            className="object-cover transition duration-500 group-hover:scale-105"
+            className="object-contain p-2 transition duration-500 group-hover:scale-105"
             fallbackLabel="Product image"
           />
         </div>
@@ -89,10 +89,6 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(212,175,55,0.4)] bg-[rgba(212,175,55,0.1)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-gold)]" />
-          Stock {selectedVariant.stock}
-        </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(248,245,240,0.2)] bg-[rgba(248,245,240,0.06)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-ivory)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ivory)]" />
           Ships 24–48 hrs
@@ -110,15 +106,18 @@ export const ProductCard = ({ product, bottleMockupsEnabled }: { product: Produc
       </label>
       {!ack ? <p className="mt-2 text-xs text-[var(--color-muted)]">Accept the required terms to enable add to cart.</p> : null}
       {mustChooseVariant && !selectedVariantId ? <p className="mt-2 text-xs text-[var(--color-muted)]">Choose a strength before adding to cart.</p> : null}
-      {selectedVariant.stock <= 0 ? <p className="mt-2 text-xs text-red-300">Selected strength is out of stock.</p> : null}
+      {added ? <p className="mt-2 text-xs text-green-200" role="status">Added to cart successfully.</p> : null}
 
       <div className="mt-4 flex flex-col gap-2 min-[420px]:flex-row min-[420px]:gap-3">
         <button
           className="min-h-11 flex-1 rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-depth)_75%,var(--color-brand-red)_25%)] px-4 py-3 text-xs uppercase tracking-[0.12em] text-[var(--color-text)] transition hover:border-[var(--color-gold)] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:tracking-[0.14em]"
           disabled={!canAddToCart}
-          onClick={() => addItem(product.id, selectedVariant.id, 1)}
+          onClick={() => {
+            addItem(product.id, selectedVariant.id, 1);
+            setAdded(true);
+          }}
         >
-          Add to Cart
+          {added ? 'Added to Cart' : 'Add to Cart'}
         </button>
         <Link
           className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--color-gold)] px-4 py-3 text-xs uppercase tracking-[0.12em] text-[var(--color-depth)] sm:text-sm sm:tracking-[0.14em]"

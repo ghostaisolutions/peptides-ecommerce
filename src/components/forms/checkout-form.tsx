@@ -174,7 +174,12 @@ export const CheckoutForm = ({
     setSubmitting(false);
 
     if (!response.ok) {
-      setMessage('Order request failed. Please review your information.');
+      const payload = await response.json().catch(() => ({ error: 'Order request failed. Please review your information.' })) as { error?: string | { fieldErrors?: Record<string, string[]>; formErrors?: string[] } };
+      const error = payload.error;
+      const fieldErrors = typeof error === 'object' ? error.fieldErrors : undefined;
+      const firstFieldError = fieldErrors ? Object.values(fieldErrors).flat()[0] : undefined;
+      const formError = typeof error === 'object' ? error.formErrors?.[0] : undefined;
+      setMessage(typeof error === 'string' ? error : firstFieldError ?? formError ?? 'Order request failed. Please review your information.');
       return;
     }
 
@@ -206,10 +211,10 @@ export const CheckoutForm = ({
             return (
               <div
                 key={label}
-                className={`min-w-0 rounded-xl border px-3 py-3 text-[10px] uppercase tracking-[0.1em] transition sm:px-4 sm:text-xs sm:tracking-[0.16em] ${isActive ? 'border-[var(--color-gold)] bg-[rgba(212,175,55,0.15)] text-[var(--color-text)] shadow-[0_0_18px_rgba(212,175,55,0.2)]' : isComplete ? 'border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] text-[var(--color-text)]' : 'border-[var(--color-border)] bg-transparent text-[var(--color-muted)]'}`}
+                className={`min-w-0 overflow-hidden rounded-xl border px-2 py-3 text-[9px] uppercase tracking-[0.08em] transition sm:px-4 sm:text-xs sm:tracking-[0.14em] ${isActive ? 'border-[var(--color-gold)] bg-[rgba(212,175,55,0.15)] text-[var(--color-text)] shadow-[0_0_18px_rgba(212,175,55,0.2)]' : isComplete ? 'border-[var(--color-border)] bg-[rgba(0,0,0,0.2)] text-[var(--color-text)]' : 'border-[var(--color-border)] bg-transparent text-[var(--color-muted)]'}`}
               >
                 <span className="block text-[10px] text-[var(--color-gold)]">Step {index + 1}</span>
-                <span className="mt-1 block leading-snug">{label}</span>
+                <span className="mt-1 block break-words leading-snug">{label}</span>
               </div>
             );
           })}
@@ -257,6 +262,7 @@ export const CheckoutForm = ({
               <label className="text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Discount code</label>
               <input className="input mt-2" placeholder="Enter code" value={discountCode} onChange={(event) => setDiscountCode(event.target.value)} />
               {pricing.appliedRule ? <p className="mt-2 text-xs text-[var(--color-sand)]">Applied: {pricing.appliedRule.name}</p> : null}
+              {discountCode.trim() && !pricing.appliedRule ? <p className="mt-2 text-xs text-red-300">No matching active discount code found.</p> : null}
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] p-4 text-sm text-[var(--color-muted)]">

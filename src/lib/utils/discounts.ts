@@ -9,14 +9,16 @@ export const computeDiscount = ({
   rules: DiscountRule[];
   code?: string;
 }) => {
+  const normalizedCode = code?.trim().toLowerCase();
   const subtotal = items.reduce((sum, item) => sum + item.variant.price * item.quantity, 0);
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const applicable = rules.filter((rule) => {
     if (!rule.active) return false;
     if (rule.minQuantity > totalQuantity) return false;
-    if (rule.code && code && rule.code.toLowerCase() !== code.toLowerCase()) return false;
-    if (rule.code && !code) return false;
+    if (normalizedCode) {
+      if (!rule.code || rule.code.trim().toLowerCase() !== normalizedCode) return false;
+    } else if (rule.code) return false;
 
     if (rule.eligibleProductIds && rule.eligibleProductIds.length > 0) {
       return items.some((item) => rule.eligibleProductIds?.includes(item.product.id));

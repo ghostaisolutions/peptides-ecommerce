@@ -33,6 +33,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <section className="grid gap-6 md:grid-cols-2">
         <article className="premium-surface rounded-2xl p-6">
           <h2 className="font-serif text-2xl text-[var(--color-text)]">Product Details</h2>
+          {product.longDescription ? (
+            <p className="mt-4 whitespace-pre-line text-sm leading-6 text-[var(--color-muted)]">{product.longDescription}</p>
+          ) : null}
           <ul className="mt-4 space-y-2 text-sm text-[var(--color-muted)]">
             {product.attributes.map((attribute) => (
               <li key={attribute.label} className="flex justify-between border-b border-[var(--color-border)] pb-2">

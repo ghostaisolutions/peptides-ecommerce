@@ -141,7 +141,8 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
     patch: { sortOrder?: number; isDefault?: boolean; active?: boolean },
   ) => {
     await submitJson(`/api/admin/variants/${variantId}`, 'PATCH', patch);
-    setStatusMessage('Variant updated. Refresh to load latest records.');
+    setStatusMessage('Variant updated.');
+    window.location.reload();
   };
 
   const onCreateDiscount = async () => {
