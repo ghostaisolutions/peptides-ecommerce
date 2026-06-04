@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { AgeGateRegistrant, COADocument, DiscountRule, ShippingMethod } from '@/lib/types';
 
@@ -44,6 +44,11 @@ const sections: AdminSection[] = [
   'Settings',
 ];
 
+const adminSectionStorageKey = 'peppers-admin-active-section';
+
+const isAdminSection = (value: string | null): value is AdminSection =>
+  sections.includes(value as AdminSection);
+
 const statusOptions = ['pending', 'reviewing', 'approved', 'payment-sent', 'completed', 'cancelled'] as const;
 type OrderStatusOption = (typeof statusOptions)[number];
 
@@ -68,6 +73,7 @@ const downloadCsv = (filename: string, lines: string[]) => {
 
 export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods, initialSettings }: DashboardProps) => {
   const [active, setActive] = useState<AdminSection>('Dashboard');
+  const [hasLoadedActiveSection, setHasLoadedActiveSection] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [registrantSearch, setRegistrantSearch] = useState('');
   const [settings, setSettings] = useState<Record<string, string>>(initialSettings);
@@ -107,6 +113,25 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
     active: true,
   });
 
+  useEffect(() => {
+    const savedSection = window.localStorage.getItem(adminSectionStorageKey);
+    if (isAdminSection(savedSection)) {
+      setActive(savedSection);
+    }
+    setHasLoadedActiveSection(true);
+  }, []);
+
+  useEffect(() => {
+    if (hasLoadedActiveSection) {
+      window.localStorage.setItem(adminSectionStorageKey, active);
+    }
+  }, [active, hasLoadedActiveSection]);
+
+  const refreshAdminSection = () => {
+    window.localStorage.setItem(adminSectionStorageKey, active);
+    window.location.reload();
+  };
+
   const submitJson = async (url: string, method: 'POST' | 'PATCH' | 'DELETE', payload?: Record<string, unknown>) => {
     const response = await fetch(url, {
       method,
@@ -137,7 +162,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
     try {
       const result = await submitJson(`/api/admin/orders/${orderId}`, 'PATCH', { status });
       setStatusMessage(result.warning ? `Order status updated. ${result.warning}` : 'Order status updated.');
-      window.setTimeout(() => window.location.reload(), result.warning ? 2500 : 250);
+      window.setTimeout(refreshAdminSection, result.warning ? 2500 : 250);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to update order status.');
     }
@@ -163,7 +188,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
   ) => {
     await submitJson(`/api/admin/variants/${variantId}`, 'PATCH', patch);
     setStatusMessage('Variant updated.');
-    window.location.reload();
+    refreshAdminSection();
   };
 
   const onCreateDiscount = async () => {
@@ -180,7 +205,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
         active: discountForm.active,
       });
       setStatusMessage('Discount rule saved.');
-      window.location.reload();
+      refreshAdminSection();
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save discount rule.');
     }
@@ -190,7 +215,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
     try {
       await submitJson(`/api/admin/discount-rules/${id}`, 'DELETE');
       setStatusMessage('Discount rule deleted.');
-      window.location.reload();
+      refreshAdminSection();
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to delete discount rule.');
     }
