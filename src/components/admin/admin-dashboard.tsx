@@ -149,13 +149,16 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
   };
 
   const onCreateDiscount = async () => {
+    const code = discountForm.code.trim();
+    const fallbackName = code || (discountForm.type === 'percent' ? `${discountForm.value}% discount` : `$${discountForm.value} discount`);
+
     try {
       await submitJson('/api/admin/discount-rules', 'POST', {
-        name: discountForm.name.trim(),
+        name: discountForm.name.trim() || fallbackName,
         type: discountForm.type,
         minQuantity: Number(discountForm.minQuantity),
         value: Number(discountForm.value),
-        code: discountForm.code.trim() || undefined,
+        code: code || undefined,
         active: discountForm.active,
       });
       setStatusMessage('Discount rule saved.');
@@ -399,7 +402,7 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
           <section className="space-y-4 rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-5">
             <h2 className="font-serif text-2xl text-[var(--color-ivory)]">Discounts</h2>
             <div className="grid gap-3 md:grid-cols-3">
-              <input className="input" placeholder="Rule name" value={discountForm.name} onChange={(event) => setDiscountForm((prev) => ({ ...prev, name: event.target.value }))} />
+              <input className="input" placeholder="Rule name (optional)" value={discountForm.name} onChange={(event) => setDiscountForm((prev) => ({ ...prev, name: event.target.value }))} />
               <select className="input" value={discountForm.type} onChange={(event) => setDiscountForm((prev) => ({ ...prev, type: event.target.value as 'percent' | 'fixed' }))}>
                 <option value="percent">Percent</option>
                 <option value="fixed">Fixed</option>
