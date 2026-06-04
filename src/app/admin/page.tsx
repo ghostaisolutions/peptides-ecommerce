@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { AdminDashboard } from '@/components/admin/admin-dashboard';
@@ -45,9 +44,6 @@ export default async function AdminPage() {
       <p className="max-w-2xl text-[var(--color-sand)]">
         Manage catalog, legal content, and orders through a configurable admin workflow.
       </p>
-      <div>
-        <Link href="/admin/orders" className="btn-secondary">Open Orders Workspace</Link>
-      </div>
       <AdminDashboard
         ageGateRegistrants={ageGateRegistrants}
         discountRules={discountRules}

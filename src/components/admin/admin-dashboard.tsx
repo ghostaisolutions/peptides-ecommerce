@@ -66,7 +66,7 @@ const downloadCsv = (filename: string, lines: string[]) => {
   URL.revokeObjectURL(url);
 };
 
-export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods, initialSettings }: DashboardProps) => {
+export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods, initialSettings }: DashboardProps) => {
   const [active, setActive] = useState<AdminSection>('Dashboard');
   const [statusMessage, setStatusMessage] = useState('');
   const [registrantSearch, setRegistrantSearch] = useState('');
@@ -113,14 +113,16 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
       headers: payload ? { 'Content-Type': 'application/json' } : undefined,
       body: payload ? JSON.stringify(payload) : undefined,
     });
+    const body = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const body = await response.json().catch(() => ({ error: 'Request failed.' }));
       const fieldErrors = typeof body.error === 'object' ? body.error.fieldErrors : undefined;
       const firstFieldError = fieldErrors ? Object.values(fieldErrors).flat()[0] : undefined;
       const formError = typeof body.error === 'object' ? body.error.formErrors?.[0] : undefined;
       throw new Error(typeof body.error === 'string' ? body.error : firstFieldError ?? formError ?? 'Request failed.');
     }
+
+    return body as { warning?: string };
   };
 
   const filteredRegistrants = useMemo(() => {
@@ -133,9 +135,9 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
 
   const onUpdateOrder = async (orderId: string, status: string) => {
     try {
-      await submitJson(`/api/admin/orders/${orderId}`, 'PATCH', { status });
-      setStatusMessage('Order status updated.');
-      window.location.reload();
+      const result = await submitJson(`/api/admin/orders/${orderId}`, 'PATCH', { status });
+      setStatusMessage(result.warning ? `Order status updated. ${result.warning}` : 'Order status updated.');
+      window.setTimeout(() => window.location.reload(), result.warning ? 2500 : 250);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to update order status.');
     }
@@ -302,36 +304,27 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
 
   return (
     <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
-      <aside className="rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-3">
-        <p className="px-3 py-2 text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">Admin</p>
-        <nav className="space-y-1">
-          {sections.map((section) => (
-            <button
-              key={section}
-              onClick={() => setActive(section)}
-              className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${active === section ? 'bg-[rgba(212,175,55,0.18)] text-[var(--color-ivory)]' : 'text-[var(--color-sand)] hover:bg-white/5'}`}
-            >
-              {section}
-            </button>
-          ))}
-        </nav>
+      <aside className="flex flex-col rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-3">
+        <div>
+          <p className="px-3 py-2 text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">Admin</p>
+          <nav className="space-y-1">
+            {sections.map((section) => (
+              <button
+                key={section}
+                onClick={() => setActive(section)}
+                className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${active === section ? 'bg-[rgba(212,175,55,0.18)] text-[var(--color-ivory)]' : 'text-[var(--color-sand)] hover:bg-white/5'}`}
+              >
+                {section}
+              </button>
+            ))}
+          </nav>
+        </div>
+        <button className="mt-6 rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-gold)] transition hover:bg-[var(--color-gold)]/10 lg:mt-auto" onClick={onLogout}>
+          Logout
+        </button>
       </aside>
 
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-4">
-          <p className="text-sm text-[var(--color-sand)]">
-            {dbEnabled ? 'Database mode enabled.' : 'Seed fallback mode enabled.'} {isClientMode ? 'Client handoff mode enabled.' : ''}
-          </p>
-          <div className="flex items-center gap-2">
-            <a href="/admin/products" className="rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10 transition">
-              Manage Products
-            </a>
-            <button className="rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]" onClick={onLogout}>
-              Logout
-            </button>
-          </div>
-        </div>
-
         {statusMessage ? <p className="text-sm text-[var(--color-sand)]">{statusMessage}</p> : null}
 
         {active === 'Dashboard' ? (
@@ -350,17 +343,16 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
                 <h2 className="font-serif text-2xl text-[var(--color-ivory)]">Orders</h2>
                 <p className="mt-1 text-sm text-[var(--color-sand)]">Click an order card to open its workspace.</p>
               </div>
-              <Link href="/admin/orders" className="btn-secondary">Full Orders Workspace</Link>
             </div>
             <div className="mt-5 overflow-x-auto pb-2">
-              <div className="grid min-w-[1120px] grid-cols-6 gap-3">
+              <div className="flex min-w-max gap-3">
                 {statusOptions.map((status) => {
                   const columnOrders = orders.filter((order) => order.status === status);
 
                   return (
                     <section
                       key={status}
-                      className="min-h-[260px] rounded-xl border border-[var(--color-gold-soft)] bg-[rgba(255,255,255,0.03)] p-3"
+                      className="min-h-[260px] w-[240px] shrink-0 rounded-xl border border-[var(--color-gold-soft)] bg-[rgba(255,255,255,0.03)] p-3"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
@@ -849,12 +841,12 @@ const OrderCard = ({
         </p>
       </Link>
       <div className="mt-4 grid gap-2">
-        <select className="input h-10 w-full" value={status} onChange={(event) => setStatus(event.target.value)}>
+        <select className="input h-12 w-full min-w-0 truncate px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value)}>
           {statusOptions.map((option) => (
             <option key={option} value={option}>{statusLabels[option]}</option>
           ))}
         </select>
-        <button className="rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]" onClick={() => void onUpdate(order.id, status)}>
+        <button className="min-h-11 rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.08em] text-[var(--color-gold)] transition hover:bg-[var(--color-gold)]/10" onClick={() => void onUpdate(order.id, status)}>
           Update Status
         </button>
       </div>

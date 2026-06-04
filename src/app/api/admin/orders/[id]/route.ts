@@ -41,21 +41,34 @@ export async function PATCH(
       paymentLink: parsed.data.paymentLink || undefined,
     });
 
+    const emailWarnings: string[] = [];
+    const sendWorkflowEmail = async (send: () => Promise<void>) => {
+      try {
+        await send();
+      } catch (error) {
+        emailWarnings.push(error instanceof Error ? error.message : 'Email delivery failed.');
+      }
+    };
+
     if (updated.status === 'approved') {
-      await sendOrderApprovedEmail(updated);
+      await sendWorkflowEmail(() => sendOrderApprovedEmail(updated));
     }
 
     if (updated.status === 'payment-sent') {
-      await sendPaymentInstructionsEmail(updated);
+      await sendWorkflowEmail(() => sendPaymentInstructionsEmail(updated));
     }
 
     if (updated.status === 'completed') {
-      await sendOrderCompletedEmail(updated);
+      await sendWorkflowEmail(() => sendOrderCompletedEmail(updated));
     }
 
-    await sendAdminNotification(updated, `order-${updated.status}`);
+    await sendWorkflowEmail(() => sendAdminNotification(updated, `order-${updated.status}`));
 
-    return NextResponse.json({ success: true, order: updated });
+    return NextResponse.json({
+      success: true,
+      order: updated,
+      warning: emailWarnings.length > 0 ? emailWarnings.join(' ') : undefined,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to update order.' },

@@ -63,7 +63,16 @@ const sendEmail = async (event: string, payload: EmailPayload) => {
 
   if (!response.ok) {
     const body = await response.text().catch(() => 'Unknown Resend error');
-    throw new Error(`Resend email failed: ${body}`);
+    let message = body;
+
+    try {
+      const parsed = JSON.parse(body) as { message?: string };
+      message = parsed.message ?? body;
+    } catch {
+      message = body;
+    }
+
+    throw new Error(`Email delivery warning: ${message}`);
   }
 };
 
