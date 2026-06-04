@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import type { AgeGateRegistrant, COADocument, DiscountRule, ShippingMethod } from '@/lib/types';
@@ -43,7 +44,17 @@ const sections: AdminSection[] = [
   'Settings',
 ];
 
-const statusOptions = ['pending', 'reviewing', 'approved', 'payment-sent', 'completed', 'cancelled'];
+const statusOptions = ['pending', 'reviewing', 'approved', 'payment-sent', 'completed', 'cancelled'] as const;
+type OrderStatusOption = (typeof statusOptions)[number];
+
+const statusLabels: Record<OrderStatusOption, string> = {
+  pending: 'Pending',
+  reviewing: 'Reviewing',
+  approved: 'Approved',
+  'payment-sent': 'Payment Sent',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
 
 const downloadCsv = (filename: string, lines: string[]) => {
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -121,8 +132,13 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
   }, [ageGateRegistrants, registrantSearch]);
 
   const onUpdateOrder = async (orderId: string, status: string) => {
-    await submitJson(`/api/admin/orders/${orderId}`, 'PATCH', { status });
-    setStatusMessage('Order status updated. Refresh to load latest records.');
+    try {
+      await submitJson(`/api/admin/orders/${orderId}`, 'PATCH', { status });
+      setStatusMessage('Order status updated.');
+      window.location.reload();
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to update order status.');
+    }
   };
 
   const onCreateVariant = async () => {
@@ -329,11 +345,46 @@ export const AdminDashboard = ({ dbEnabled, isClientMode, products, legalPages, 
 
         {active === 'Orders' ? (
           <section className="rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-5">
-            <h2 className="font-serif text-2xl text-[var(--color-ivory)]">Orders</h2>
-            <div className="mt-4 space-y-3">
-              {orders.map((order) => (
-                <OrderRow key={order.id} order={order} onUpdate={onUpdateOrder} />
-              ))}
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-2xl text-[var(--color-ivory)]">Orders</h2>
+                <p className="mt-1 text-sm text-[var(--color-sand)]">Click an order card to open its workspace.</p>
+              </div>
+              <Link href="/admin/orders" className="btn-secondary">Full Orders Workspace</Link>
+            </div>
+            <div className="mt-5 overflow-x-auto pb-2">
+              <div className="grid min-w-[1120px] grid-cols-6 gap-3">
+                {statusOptions.map((status) => {
+                  const columnOrders = orders.filter((order) => order.status === status);
+
+                  return (
+                    <section
+                      key={status}
+                      className="min-h-[260px] rounded-xl border border-[var(--color-gold-soft)] bg-[rgba(255,255,255,0.03)] p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
+                          {statusLabels[status]}
+                        </h3>
+                        <span className="rounded-full border border-[var(--color-gold-soft)] px-2 py-0.5 text-xs text-[var(--color-sand)]">
+                          {columnOrders.length}
+                        </span>
+                      </div>
+                      <div className="mt-3 space-y-3">
+                        {columnOrders.length > 0 ? (
+                          columnOrders.map((order) => (
+                            <OrderCard key={order.id} order={order} onUpdate={onUpdateOrder} />
+                          ))
+                        ) : (
+                          <p className="rounded-lg border border-dashed border-[var(--color-border)] px-3 py-8 text-center text-xs text-[var(--color-muted)]">
+                            No orders
+                          </p>
+                        )}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
             </div>
           </section>
         ) : null}
@@ -773,7 +824,7 @@ const StatCard = ({ label, value }: { label: string; value: string }) => (
   </article>
 );
 
-const OrderRow = ({
+const OrderCard = ({
   order,
   onUpdate,
 }: {
@@ -781,22 +832,32 @@ const OrderRow = ({
   onUpdate: (orderId: string, status: string) => Promise<void>;
 }) => {
   const [status, setStatus] = useState(order.status);
+  const detailHref = `/admin/orders/${encodeURIComponent(order.orderReference)}`;
 
   return (
-    <div className="rounded-lg border border-[var(--color-gold-soft)] p-3">
-      <p className="font-medium text-[var(--color-ivory)]">{order.orderReference}</p>
-      <p className="text-xs text-[var(--color-sand)]">{order.email}</p>
-      <p className="text-xs text-[var(--color-muted)]">{new Date(order.createdAt).toLocaleString()}</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <select className="input max-w-[190px]" value={status} onChange={(event) => setStatus(event.target.value)}>
+    <article className="rounded-lg border border-[var(--color-gold-soft)] bg-[rgba(20,8,10,0.82)] p-3">
+      <Link
+        href={detailHref}
+        className="-m-2 block rounded-md p-2 transition hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
+        aria-label={`Open order workspace for ${order.orderReference}`}
+      >
+        <p className="break-words font-medium text-[var(--color-ivory)]">{order.orderReference}</p>
+        <p className="mt-1 break-words text-xs text-[var(--color-sand)]">{order.email}</p>
+        <p className="mt-1 text-xs text-[var(--color-muted)]">{new Date(order.createdAt).toLocaleString()}</p>
+        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
+          Open Order Workspace
+        </p>
+      </Link>
+      <div className="mt-4 grid gap-2">
+        <select className="input h-10 w-full" value={status} onChange={(event) => setStatus(event.target.value)}>
           {statusOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
+            <option key={option} value={option}>{statusLabels[option]}</option>
           ))}
         </select>
-        <button className="rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]" onClick={() => onUpdate(order.id, status)}>
-          Update
+        <button className="rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]" onClick={() => void onUpdate(order.id, status)}>
+          Update Status
         </button>
       </div>
-    </div>
+    </article>
   );
 };
