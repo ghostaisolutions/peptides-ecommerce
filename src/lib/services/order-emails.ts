@@ -9,6 +9,7 @@ const logTemplate = (event: string, payload: Record<string, unknown>) => {
 const fromAddress = process.env.EMAIL_FROM ?? siteConfig.supportEmail;
 const adminEmail = process.env.ADMIN_EMAIL ?? siteConfig.supportEmail;
 const resendApiKey = process.env.RESEND_API_KEY;
+const requiresEmailDelivery = process.env.NODE_ENV === 'production';
 
 type EmailPayload = {
   to: string | string[];
@@ -35,6 +36,10 @@ const paragraphize = (value: string) =>
 
 const sendEmail = async (event: string, payload: EmailPayload) => {
   if (!resendApiKey) {
+    if (requiresEmailDelivery) {
+      throw new Error('Resend email delivery is not configured. Set RESEND_API_KEY in Vercel.');
+    }
+
     logTemplate(event, { from: fromAddress, ...payload, resendConfigured: false });
     return;
   }
