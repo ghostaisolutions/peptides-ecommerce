@@ -344,8 +344,8 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
   const activeProduct = products.find((product) => product.id === variantProductId);
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[230px_minmax(0,1fr)]">
-      <aside className="flex flex-col rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-3">
+    <div className="mx-auto grid min-w-0 gap-5 xl:max-w-[1800px] lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside className="flex flex-col rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-3 lg:sticky lg:top-28 lg:max-h-[calc(100dvh-8rem)]">
         <div>
           <p className="px-3 py-2 text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">Admin</p>
           <nav className="space-y-1">
@@ -378,22 +378,22 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
         ) : null}
 
         {active === 'Orders' ? (
-          <section className="max-w-full overflow-hidden rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-5">
+          <section className="max-w-full rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-4 xl:p-5">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="font-serif text-2xl text-[var(--color-ivory)]">Orders</h2>
                 <p className="mt-1 text-sm text-[var(--color-sand)]">Click an order card to open its workspace.</p>
               </div>
             </div>
-            <div className="mt-5 max-w-full overflow-x-auto pb-2">
-              <div className="flex min-w-max gap-3">
+            <div className="mt-5">
+              <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3 min-[1500px]:grid-cols-6">
                 {statusOptions.map((status) => {
                   const columnOrders = orders.filter((order) => order.status === status);
 
                   return (
                     <section
                       key={status}
-                      className="min-h-[260px] w-[240px] shrink-0 rounded-xl border border-[var(--color-gold-soft)] bg-[rgba(255,255,255,0.03)] p-3"
+                      className="min-h-[260px] min-w-0 rounded-xl border border-[var(--color-gold-soft)] bg-[rgba(255,255,255,0.03)] p-3"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
@@ -403,7 +403,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
                           {columnOrders.length}
                         </span>
                       </div>
-                      <div className="mt-3 space-y-3">
+                      <div className="mt-3 max-h-[calc(100dvh-20rem)] space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
                         {columnOrders.length > 0 ? (
                           columnOrders.map((order) => (
                             <OrderCard key={order.id} order={order} onUpdate={onUpdateOrder} />
@@ -874,20 +874,20 @@ const OrderCard = ({
         className="-m-2 block rounded-md p-2 transition hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
         aria-label={`Open order workspace for ${order.orderReference}`}
       >
-        <p className="break-words font-medium text-[var(--color-ivory)]">{order.orderReference}</p>
+        <p className="break-words text-sm font-semibold text-[var(--color-ivory)]">{order.orderReference}</p>
         <p className="mt-1 break-words text-xs text-[var(--color-sand)]">{order.email}</p>
         <p className="mt-1 text-xs text-[var(--color-muted)]">{new Date(order.createdAt).toLocaleString()}</p>
-        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
+        <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gold)]">
           Open Order Workspace
         </p>
       </Link>
-      <div className="mt-4 grid gap-2">
+      <div className="mt-3 grid gap-2">
         <select className="input h-12 w-full min-w-0 truncate px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value)}>
           {statusOptions.map((option) => (
             <option key={option} value={option}>{statusLabels[option]}</option>
           ))}
         </select>
-        <button className="min-h-11 rounded-full border border-[var(--color-gold)] px-4 py-2 text-xs uppercase tracking-[0.08em] text-[var(--color-gold)] transition hover:bg-[var(--color-gold)]/10" onClick={() => void onUpdate(order.id, status)}>
+        <button className="min-h-10 rounded-full border border-[var(--color-gold)] px-4 py-2 text-[11px] uppercase tracking-[0.08em] text-[var(--color-gold)] transition hover:bg-[var(--color-gold)]/10" onClick={() => void onUpdate(order.id, status)}>
           Update Status
         </button>
       </div>
