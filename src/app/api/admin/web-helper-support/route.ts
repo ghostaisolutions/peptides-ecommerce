@@ -46,7 +46,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Support request acknowledgement is required.' }, { status: 400 });
   }
 
-  const webhookSecret = process.env.GHOST_MISSION_CONTROL_WEBHOOK_SECRET?.trim();
+  const webhookSecret = (
+    process.env.GHOST_WEB_HELPER_WEBHOOK_SECRET ||
+    process.env.GHOST_MISSION_CONTROL_WEBHOOK_SECRET ||
+    ''
+  ).trim();
   if (!webhookSecret) {
     return NextResponse.json({ error: 'Mission Control webhook secret is not configured.' }, { status: 500 });
   }
