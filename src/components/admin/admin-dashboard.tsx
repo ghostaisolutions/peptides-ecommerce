@@ -63,6 +63,42 @@ const statusLabels: Record<OrderStatusOption, string> = {
   cancelled: 'Cancelled',
 };
 
+type SupportErrorBody = {
+  error?: string;
+  detail?: {
+    webhook_url?: string;
+    attempted_secret_count?: number;
+    attempted_secret_fingerprints?: string[];
+    mission_control?: {
+      provided_fingerprint?: string;
+      accepted_fingerprints?: string[];
+      accepted_secret_count?: number;
+    };
+  };
+};
+
+const formatSupportError = (body: SupportErrorBody) => {
+  const detail = body.detail;
+  if (!detail) return body.error || 'Support request failed.';
+
+  const parts = [body.error || 'Support request failed.'];
+  if (detail.webhook_url) parts.push(`Webhook: ${detail.webhook_url}`);
+  if (detail.attempted_secret_fingerprints?.length) {
+    parts.push(`Vercel sent fingerprint(s): ${detail.attempted_secret_fingerprints.join(', ')}`);
+  }
+  if (detail.mission_control?.accepted_fingerprints?.length) {
+    parts.push(`Mission Control accepts: ${detail.mission_control.accepted_fingerprints.join(', ')}`);
+  }
+  if (detail.mission_control?.provided_fingerprint) {
+    parts.push(`Mission Control received: ${detail.mission_control.provided_fingerprint}`);
+  }
+  if (detail.mission_control?.accepted_secret_count !== undefined) {
+    parts.push(`Mission Control accepted secret count: ${detail.mission_control.accepted_secret_count}`);
+  }
+
+  return parts.join(' | ');
+};
+
 const downloadCsv = (filename: string, lines: string[]) => {
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -335,7 +371,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
       });
       const body = await response.json().catch(() => ({ error: 'Support request failed.' }));
       if (!response.ok) {
-        throw new Error(body.error || 'Support request failed.');
+        throw new Error(formatSupportError(body));
       }
 
       const ticketId = body.ticketId || body.id || 'support request';
