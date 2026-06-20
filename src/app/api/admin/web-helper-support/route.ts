@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
 import { isAdminAuthenticated } from '@/lib/auth/admin';
@@ -39,6 +40,8 @@ const configuredWebhookSecrets = () => {
 
   return Array.from(new Set(secrets));
 };
+
+const secretFingerprint = (value: string) => createHash('sha256').update(value).digest('hex').slice(0, 12);
 
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
@@ -115,7 +118,12 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: missionResult?.error ?? 'Mission Control did not accept the support request.',
-        detail: missionResult?.detail,
+        detail: {
+          mission_control: missionResult?.detail,
+          webhook_url: webhookUrl,
+          attempted_secret_count: webhookSecrets.length,
+          attempted_secret_fingerprints: webhookSecrets.map(secretFingerprint),
+        },
       },
       { status: response?.status ?? 502 },
     );
