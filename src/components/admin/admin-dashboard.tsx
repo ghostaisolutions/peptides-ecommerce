@@ -29,6 +29,7 @@ type AdminSection =
   | 'Shipping'
   | 'Age Gate Registrants'
   | 'Legal / Content'
+  | 'Website Support'
   | 'Settings';
 
 const sections: AdminSection[] = [
@@ -41,6 +42,7 @@ const sections: AdminSection[] = [
   'Shipping',
   'Age Gate Registrants',
   'Legal / Content',
+  'Website Support',
   'Settings',
 ];
 
@@ -81,6 +83,18 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
   const [settingsSection, setSettingsSection] = useState<'store' | 'contact' | 'payment' | 'legal' | 'branding' | 'checkout'>('store');
   const [savingSettings, setSavingSettings] = useState(false);
   const [uploadingSetting, setUploadingSetting] = useState('');
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportSentTicket, setSupportSentTicket] = useState('');
+  const [supportForm, setSupportForm] = useState({
+    pageUrl: '',
+    requesterName: '',
+    requesterEmail: '',
+    requestType: 'text_update',
+    priority: 'normal',
+    summary: '',
+    details: '',
+    acknowledged: false,
+  });
 
   const [variantProductId, setVariantProductId] = useState(products[0]?.id ?? '');
   const [variantForm, setVariantForm] = useState({ name: '', sku: '', price: '0', stock: '0', sortOrder: '0', isDefault: false });
@@ -302,6 +316,42 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save settings.');
     } finally {
       setSavingSettings(false);
+    }
+  };
+
+  const onSendSupportTicket = async () => {
+    if (!supportForm.acknowledged) {
+      setStatusMessage('Confirm the support request approval note before sending.');
+      return;
+    }
+
+    setSupportSending(true);
+    setSupportSentTicket('');
+    try {
+      const response = await fetch('/api/admin/web-helper-support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(supportForm),
+      });
+      const body = await response.json().catch(() => ({ error: 'Support request failed.' }));
+      if (!response.ok) {
+        throw new Error(body.error || 'Support request failed.');
+      }
+
+      const ticketId = body.ticketId || body.id || 'support request';
+      setSupportSentTicket(ticketId);
+      setStatusMessage(`Support request sent to Ghost Mission Control. Ticket: ${ticketId}`);
+      setSupportForm((prev) => ({
+        ...prev,
+        pageUrl: '',
+        summary: '',
+        details: '',
+        acknowledged: false,
+      }));
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to send support request.');
+    } finally {
+      setSupportSending(false);
     }
   };
 
@@ -616,6 +666,120 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
             <textarea className="input min-h-20" name="intro" placeholder="Intro" required />
             <button className="rounded-full bg-[var(--color-gold)] px-6 py-2 text-xs uppercase tracking-[0.16em] text-[var(--color-ink)]" type="submit">Save Legal Page</button>
           </form>
+        ) : null}
+
+        {active === 'Website Support' ? (
+          <section className="space-y-5 rounded-2xl border border-[var(--color-gold-soft)] bg-[var(--color-ink-2)] p-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-gold)]">Web Helper</p>
+              <h2 className="mt-1 font-serif text-2xl text-[var(--color-ivory)]">Website Support</h2>
+              <p className="mt-2 max-w-3xl text-sm text-[var(--color-sand)]">
+                Send website update requests, bugs, and layout issues to the Peppers and Vibes Web Helper. Changes stay review-gated before anything is published.
+              </p>
+            </div>
+
+            {supportSentTicket ? (
+              <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+                Request sent successfully. Ticket: {supportSentTicket}
+              </div>
+            ) : null}
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Page or Section</label>
+                <input
+                  className="input"
+                  placeholder="/shop, /checkout, admin discounts"
+                  value={supportForm.pageUrl}
+                  onChange={(event) => setSupportForm((prev) => ({ ...prev, pageUrl: event.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Requester Name</label>
+                <input
+                  className="input"
+                  placeholder="Name"
+                  value={supportForm.requesterName}
+                  onChange={(event) => setSupportForm((prev) => ({ ...prev, requesterName: event.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Requester Email</label>
+                <input
+                  className="input"
+                  placeholder="email@example.com"
+                  type="email"
+                  value={supportForm.requesterEmail}
+                  onChange={(event) => setSupportForm((prev) => ({ ...prev, requesterEmail: event.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Request Type</label>
+                <select
+                  className="input"
+                  value={supportForm.requestType}
+                  onChange={(event) => setSupportForm((prev) => ({ ...prev, requestType: event.target.value }))}
+                >
+                  <option value="text_update">Text update</option>
+                  <option value="bug">Bug fix</option>
+                  <option value="layout_change">Layout change</option>
+                  <option value="image_update">Image update</option>
+                  <option value="product_update">Product update</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Priority</label>
+                <select
+                  className="input"
+                  value={supportForm.priority}
+                  onChange={(event) => setSupportForm((prev) => ({ ...prev, priority: event.target.value }))}
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Short Summary</label>
+                <input
+                  className="input"
+                  placeholder="What should change?"
+                  value={supportForm.summary}
+                  onChange={(event) => setSupportForm((prev) => ({ ...prev, summary: event.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-[0.14em] text-[var(--color-gold)]">Details for the Web Helper</label>
+              <textarea
+                className="input min-h-40"
+                placeholder="Describe what should change, where it appears, and any exact copy or product/admin context to use."
+                value={supportForm.details}
+                onChange={(event) => setSupportForm((prev) => ({ ...prev, details: event.target.value }))}
+              />
+            </div>
+
+            <label className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] p-4 text-sm text-[var(--color-sand)]">
+              <input
+                className="mt-1 h-4 w-4 accent-[var(--color-gold)]"
+                type="checkbox"
+                checked={supportForm.acknowledged}
+                onChange={(event) => setSupportForm((prev) => ({ ...prev, acknowledged: event.target.checked }))}
+              />
+              <span>I understand this creates a support request only. Website changes require review and approval before publishing.</span>
+            </label>
+
+            <button
+              className="btn-primary w-full justify-center"
+              disabled={supportSending}
+              onClick={onSendSupportTicket}
+            >
+              {supportSending ? 'Sending to Web Helper...' : 'Send to Website Helper'}
+            </button>
+          </section>
         ) : null}
 
         {active === 'Settings' ? (
