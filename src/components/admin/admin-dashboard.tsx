@@ -109,6 +109,54 @@ const downloadCsv = (filename: string, lines: string[]) => {
   URL.revokeObjectURL(url);
 };
 
+type SupportFormState = {
+  pageUrl: string;
+  requesterName: string;
+  requesterEmail: string;
+  requestType: string;
+  priority: string;
+  summary: string;
+  details: string;
+  acknowledged: boolean;
+};
+
+const weakSupportText = new Set([
+  'bug',
+  'fix',
+  'help',
+  'issue',
+  'n/a',
+  'na',
+  'none',
+  'test',
+  'testing',
+  'todo',
+  'what should change?',
+]);
+
+const normalizeSupportText = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
+
+const hasUsefulSupportDetail = (value: string, minLength: number) => {
+  const normalized = normalizeSupportText(value);
+  return normalized.length >= minLength && !weakSupportText.has(normalized);
+};
+
+const supportRequestValidationMessage = (form: SupportFormState) => {
+  if (!form.pageUrl.trim()) {
+    return 'Add the page, section, or admin area where the issue appears.';
+  }
+
+  if (!hasUsefulSupportDetail(form.summary, 12)) {
+    return 'Add a specific short summary, like "Update checkout shipping text" or "Fix product image on shop page."';
+  }
+
+  if (!hasUsefulSupportDetail(form.details, 35)) {
+    return 'Add enough detail for the Web Helper: where it appears, what should change, and the expected result.';
+  }
+
+  return '';
+};
+
 export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrants, discountRules, coaDocuments, shippingMethods, initialSettings }: DashboardProps) => {
   const [active, setActive] = useState<AdminSection>('Dashboard');
   const [hasLoadedActiveSection, setHasLoadedActiveSection] = useState(false);
@@ -121,7 +169,7 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
   const [uploadingSetting, setUploadingSetting] = useState('');
   const [supportSending, setSupportSending] = useState(false);
   const [supportSentTicket, setSupportSentTicket] = useState('');
-  const [supportForm, setSupportForm] = useState({
+  const [supportForm, setSupportForm] = useState<SupportFormState>({
     pageUrl: '',
     requesterName: '',
     requesterEmail: '',
@@ -356,6 +404,12 @@ export const AdminDashboard = ({ products, legalPages, orders, ageGateRegistrant
   };
 
   const onSendSupportTicket = async () => {
+    const validationMessage = supportRequestValidationMessage(supportForm);
+    if (validationMessage) {
+      setStatusMessage(validationMessage);
+      return;
+    }
+
     if (!supportForm.acknowledged) {
       setStatusMessage('Confirm the support request approval note before sending.');
       return;

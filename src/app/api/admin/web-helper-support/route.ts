@@ -4,14 +4,47 @@ import { z } from 'zod';
 
 import { isAdminAuthenticated } from '@/lib/auth/admin';
 
+const weakSupportText = new Set([
+  'bug',
+  'fix',
+  'help',
+  'issue',
+  'n/a',
+  'na',
+  'none',
+  'test',
+  'testing',
+  'todo',
+  'what should change?',
+]);
+
+const normalizeSupportText = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
+
+const hasUsefulSupportDetail = (value: string, minLength: number) => {
+  const normalized = normalizeSupportText(value);
+  return normalized.length >= minLength && !weakSupportText.has(normalized);
+};
+
 const supportTicketSchema = z.object({
   pageUrl: z.string().trim().min(1, 'Page or section is required.'),
   requesterName: z.string().trim().optional().default(''),
   requesterEmail: z.string().trim().optional().default(''),
   requestType: z.string().trim().min(1).default('other'),
   priority: z.string().trim().min(1).default('normal'),
-  summary: z.string().trim().min(3, 'A short summary is required.'),
-  details: z.string().trim().min(5, 'Request details are required.'),
+  summary: z
+    .string()
+    .trim()
+    .refine(
+      (value) => hasUsefulSupportDetail(value, 12),
+      'Add a specific short summary, like "Update checkout shipping text" or "Fix product image on shop page."',
+    ),
+  details: z
+    .string()
+    .trim()
+    .refine(
+      (value) => hasUsefulSupportDetail(value, 35),
+      'Add enough detail for the Web Helper: where it appears, what should change, and the expected result.',
+    ),
   acknowledged: z.boolean(),
 });
 
