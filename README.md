@@ -1,4 +1,22 @@
-# E-Commerce SaaS Template
+# RETIRED DUPLICATE: Peppers & Vibes storefront
+
+This repository is no longer the canonical Peppers & Vibes codebase.
+
+Use this repository instead:
+
+- Canonical GitHub repo: `burchdad/e-commerce_peptides`
+- Canonical Vercel project: `e-commerce-peptides`
+- Mission Control repo target: `burchdad/e-commerce_peptides`
+
+This repo previously deployed through the duplicate Vercel project `peptides-ecommerce`. Do not land new Peppers support fixes, admin updates, Web Helper work, or client-approved changes here.
+
+The duplicate Vercel project should be disconnected from the custom Peppers domains after confirming the canonical Vercel project is serving production.
+
+---
+
+# Historical README
+
+## E-Commerce SaaS Template
 
 Reusable, configurable Next.js storefront template with order workflow operations, admin controls, and white-label deployment support.
 
